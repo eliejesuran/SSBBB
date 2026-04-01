@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<meta name="author" content="Elie JESURAN">
+<meta name="copyright" content="© 2026 Elie JESURA">
+<meta name="date" content="2026-04-01 🐟">
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SSBBB — Fiche Technique 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #0a0a0a; --card: #161616; --border: #2a2a2a;
+  --gold: #c8a84b; --gold-dim: #6b5a28; --gold-light: #D9C382;
+  --white: #f0ece0; --grey: #888880; --muted: #444440;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--black); color: var(--white);
+  font-family: 'Space Mono', monospace; min-height: 100vh; overflow-x: hidden;
+}
+
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 999; opacity: 0.4;
+}
+
+/* ── HEADER ── */
+header {
+  position: relative; padding: 40px 40px 32px;
+  border-bottom: 1px solid var(--border); overflow: hidden;
+}
+header::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.editable-field {
+  background: transparent; border: none; color: inherit;
+  font-family: inherit; font-size: inherit; font-weight: inherit;
+  letter-spacing: inherit; line-height: inherit;
+  outline: none; cursor: text; width: 100%;
+  border-bottom: 1px dashed transparent; transition: border-color 0.2s;
+}
+.editable-field:focus { border-bottom-color: var(--gold-dim); }
+.editable-field::placeholder { color: var(--muted); }
+
+.band-name-input {
+  font-family: 'Bebas Neue', sans-serif; font-size: clamp(38px, 8vw, 100px);
+  letter-spacing: 0.08em; line-height: 0.9; color: var(--white);
+  text-shadow: 0 0 80px rgba(200,168,75,0.2); display: block;
+}
+
+.subtitle-input {
+  font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase;
+  color: var(--gold-light); margin-top: 14px; display: block;
+}
+
+.badge-row { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; align-items: center; }
+
+.header-badge {
+  border: 1px solid var(--gold-dim); padding: 5px 12px;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); background: rgba(200,168,75,0.05);
+}
+
+.badge-editable {
+  background: transparent; border: none; color: var(--gold);
+  font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; outline: none; min-width: 40px; cursor: text;
+}
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 12px 40px; border-bottom: 1px solid var(--border);
+  background: rgba(10,10,10,0.97);
+  position: sticky; top: 0; z-index: 50;
+}
+
+.toolbar-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; font-family: 'Space Mono', monospace;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px; transition: all 0.15s;
+  border: 1px solid var(--gold-dim); color: var(--gold);
+  background: rgba(200,168,75,0.05); white-space: nowrap;
+}
+.toolbar-btn:hover { background: rgba(200,168,75,0.12); border-color: var(--gold); }
+.toolbar-btn:active { transform: scale(0.97); }
+.toolbar-btn.pdf-btn { border-color: rgba(192,57,43,0.5); color: #e74c3c; background: rgba(192,57,43,0.06); }
+.toolbar-btn.pdf-btn:hover { background: rgba(192,57,43,0.14); border-color: #e74c3c; }
+
+/* ── MAIN ── */
+main { padding: 32px 40px; max-width: 1100px; margin: 0 auto; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; margin-bottom: 24px; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { border-bottom: 1px solid var(--gold-dim); }
+thead th {
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.15em;
+  color: var(--gold); padding: 10px 14px; text-align: left; font-weight: normal; white-space: nowrap;
+}
+thead th:nth-child(1) { width: 40px; text-align: center; }
+thead th:nth-child(4) { min-width: 140px; }
+thead th:last-child   { width: 32px; }
+
+tbody tr { border-bottom: 1px solid rgba(42,42,42,0.8); transition: background 0.15s; }
+tbody tr.drag-over { background: rgba(200,168,75,0.1) !important; outline: 1px dashed var(--gold-dim); }
+tbody td { padding: 11px 14px; vertical-align: middle; }
+tbody td:first-child { text-align: center; font-family: 'Bebas Neue', sans-serif; font-size: 19px; color: var(--muted); }
+
+.name-editable {
+  background: transparent; border: none; color: var(--white);
+  font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  width: 100%; outline: none; cursor: text;
+  border-bottom: 1px dashed transparent; transition: border-color 0.15s; min-width: 120px;
+}
+.name-editable:focus { border-bottom-color: var(--gold-dim); }
+.name-editable::placeholder { color: var(--muted); font-weight: normal; }
+
+/* comment cell */
+.comment-input {
+  background: transparent; border: none; color: var(--grey);
+  font-family: 'Space Mono', monospace; font-size: 11px; font-style: italic;
+  width: 100%; outline: none; cursor: text; min-width: 120px;
+  border-bottom: 1px dashed transparent; transition: border-color 0.15s;
+}
+.comment-input:focus { border-bottom-color: var(--gold-dim); color: var(--white); }
+.comment-input::placeholder { color: var(--muted); opacity: 0.5; font-size: 10px; }
+
+/* badge cell */
+.drop-cell { min-width: 140px; min-height: 32px; padding: 8px 14px; cursor: pointer; }
+.drop-cell.empty::after {
+  content: attr(data-empty-label);
+  font-size: 9px; letter-spacing: 0.15em; color: var(--muted); font-style: italic; opacity: 0.45;
+}
+
+/* remove row */
+.btn-remove-row {
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  font-size: 18px; padding: 2px 5px; transition: color 0.15s; line-height: 1;
+}
+.btn-remove-row:hover { color: #e74c3c; }
+
+/* add row */
+.btn-add-musician {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(200,168,75,0.04); border: 1px dashed var(--gold-dim);
+  color: var(--gold-dim); padding: 10px 20px;
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s; margin-bottom: 32px;
+}
+.btn-add-musician:hover { color: var(--gold); border-color: var(--gold); background: rgba(200,168,75,0.09); }
+
+/* ── BADGES ── */
+.micro-badge {
+  display: inline-flex; align-items: center;
+  padding: 4px 10px; font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; border-radius: 2px;
+  margin-right: 3px; margin-bottom: 2px;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s; position: relative;
+  white-space: nowrap;
+}
+.micro-badge:hover { opacity: 0.7; transform: scale(0.96); }
+
+.kick      { background: rgba(192,57,43,0.2);  color: #e74c3c; border: 1px solid rgba(192,57,43,0.4); }
+.oh        { background: rgba(52,152,219,0.15); color: #5dade2; border: 1px solid rgba(52,152,219,0.3); }
+.di        { background: rgba(39,174,96,0.15);  color: #58d68d; border: 1px solid rgba(39,174,96,0.3); }
+.ampli     { background: rgba(200,168,75,0.15); color: var(--gold); border: 1px solid var(--gold-dim); }
+.sm58      { background: rgba(155,89,182,0.15); color: #bb8fce; border: 1px solid rgba(155,89,182,0.3); }
+.jack      { background: rgba(230,126,34,0.15); color: #f0a500; border: 1px solid rgba(230,126,34,0.3); }
+.xlr       { background: rgba(100,100,100,0.2); color: #aaa;    border: 1px solid rgba(150,150,150,0.3); }
+.nophantom { background: rgba(243,156,18,0.1);  color: #f39c12; border: 1px solid rgba(243,156,18,0.35); font-size: 9px; }
+
+/* ── PALETTE ── */
+.palette-section { border-top: 1px solid var(--border); padding-top: 24px; }
+.palette-title-row {
+  font-size: 10px; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold-dim);
+  margin-bottom: 8px; display: flex; align-items: center; gap: 14px;
+}
+.palette-title-row::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.palette-hint { font-size: 10px; color: var(--muted); margin-bottom: 12px; font-style: italic; }
+.legend-palette { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.palette-badge {
+  display: inline-flex; align-items: center;
+  padding: 6px 13px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  border-radius: 2px; cursor: grab; user-select: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.palette-badge:active { cursor: grabbing; transform: scale(1.07); box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+.palette-badge:hover  { transform: translateY(-2px); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border); padding: 20px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 10px; color: var(--muted); letter-spacing: 0.18em;
+  flex-wrap: wrap; gap: 10px; margin-top: 20px;
+}
+
+/* ══════════════════════
+   MOBILE BOTTOM SHEET
+══════════════════════ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8); z-index: 300;
+  align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-sheet {
+  background: #1c1c1c; border: 1px solid var(--border); border-bottom: none;
+  border-radius: 16px 16px 0 0; padding: 20px 20px 40px;
+  width: 100%; max-width: 600px;
+  animation: slideUp 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.modal-handle {
+  width: 40px; height: 4px; background: var(--border);
+  border-radius: 2px; margin: 0 auto 18px; cursor: grab;
+}
+
+.modal-musician-name {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em;
+  color: var(--gold); margin-bottom: 4px;
+}
+.modal-section-label {
+  font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase;
+  color: var(--muted); margin: 16px 0 10px;
+}
+
+/* Current badges in modal */
+.modal-current-badges { display: flex; flex-wrap: wrap; gap: 8px; min-height: 36px; margin-bottom: 4px; }
+.modal-badge-active {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  border-radius: 4px; cursor: pointer; transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.modal-badge-active::after { content: ' ✕'; opacity: 0.6; font-size: 10px; }
+.modal-badge-active:active { transform: scale(0.93); }
+
+/* Add badges grid */
+.modal-add-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.modal-add-btn {
+  padding: 12px 10px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  border-radius: 4px; cursor: pointer; transition: all 0.12s;
+  -webkit-tap-highlight-color: transparent; text-align: center;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-add-btn:active { transform: scale(0.94); opacity: 0.8; }
+
+.modal-close {
+  width: 100%; padding: 13px; background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border); color: var(--grey);
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.2em;
+  text-transform: uppercase; cursor: pointer; border-radius: 4px; margin-top: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── PDF LOADING OVERLAY ── */
+.pdf-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.9); z-index: 500;
+  flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+.pdf-overlay.active { display: flex; }
+.pdf-overlay-text {
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+  letter-spacing: 0.2em; color: var(--gold);
+}
+.pdf-spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--gold-dim);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── PDF TARGET (hidden clone rendered for pdf) ── */
+#pdf-target {
+  position: fixed; left: -9999px; top: 0;
+  width: 900px; background: #0a0a0a; color: var(--white);
+  font-family: 'Space Mono', monospace; padding: 0;
+  pointer-events: none;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+@keyframes rowIn  { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+
+header          { animation: fadeUp 0.5s ease both; }
+.table-wrap     { animation: fadeUp 0.5s 0.1s ease both; }
+.palette-section{ animation: fadeUp 0.5s 0.2s ease both; }
+.new-row        { animation: rowIn 0.22s ease both; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  header, main, footer { padding-left: 16px; padding-right: 16px; }
+  .toolbar { padding: 10px 16px; gap: 6px; }
+  .toolbar-btn .label { display: none; }
+  .toolbar-btn { padding: 9px 12px; }
+  .palette-section { display: none; }
+  table { font-size: 12px; }
+  thead th { font-size: 12px; padding: 8px 10px; }
+  tbody td { padding: 10px 10px; }
+  .drop-cell { min-width: 110px; }
+  /* hide comment col on tiny screens, show in modal */
+  .col-comment { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <input class="editable-field band-name-input" id="band-name" value="Super Sexy Big Boys Band" placeholder="Nom du groupe">
+  <input class="editable-field subtitle-input" id="band-subtitle" value="Fiche Technique / Sounds / 2 juin 2026" placeholder="Sous-titre">
+  <div class="badge-row">
+    <div class="header-badge"><span id="badge-count">12 musiciens</span></div>
+    <div class="header-badge"><input class="badge-editable" id="badge-retours" value="3 retours façade" size="16"></div>
+    <div class="header-badge"><input class="badge-editable" id="badge-scene" value="4m × 3m min" size="10"></div>
+    <div class="header-badge"><input class="badge-editable" id="badge-setup" value="Setup flexible" size="14"></div>
+  </div>
+</header>
+
+<!-- ═══ TOOLBAR ═══ -->
+<div class="toolbar">
+  <button class="toolbar-btn pdf-btn" id="btn-pdf">
+    <span>⬇</span><span class="label">Export PDF</span>
+  </button>
+  <button class="toolbar-btn" id="btn-save">
+    <span>💾</span><span class="label">Sauvegarder HTML</span>
+  </button>
+  <button class="toolbar-btn" id="btn-add-toolbar" style="display:none">
+    <span style="font-size:15px">+</span><span class="label">Musicien</span>
+  </button>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<main>
+  <div class="table-wrap">
+    <table id="main-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Musicien</th>
+          <th>Micro / DI</th>
+          <th class="col-comment">Notes / Commentaires</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="musician-tbody"></tbody>
+    </table>
+  </div>
+
+  <button class="btn-add-musician" id="btn-add">
+    <span style="font-size:17px;line-height:1">+</span> Ajouter un musicien
+  </button>
+
+  <!-- PALETTE desktop -->
+  <div class="palette-section">
+    <div class="palette-title-row">Palette de badges</div>
+    <div class="palette-hint">🖱 Glisse sur une ligne pour ajouter &nbsp;|&nbsp; Clique sur un badge dans le tableau pour le retirer</div>
+    <div class="legend-palette" id="palette"></div>
+  </div>
+</main>
+
+<footer>
+  <div id="band-title" style="color:var(--gold)">SUPER SEXY BIG BOYS BAND • FICHE TECHNIQUE</div>
+  <div><input class="editable-field" id="footer-phone" value="+32 478 456 787" style="color:var(--gold);font-size:10px;letter-spacing:0.18em;width:160px" placeholder="Téléphone"></div>
+  <div><input class="editable-field" id="footer-year" value="2026" style="color:var(--gold-light);font-size:10px;letter-spacing:0.18em;width:50px" placeholder="Année"></div>
+</footer>
+
+<!-- ═══ MOBILE BOTTOM SHEET ═══ -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-sheet" id="modal-sheet">
+    <div class="modal-handle" id="modal-handle"></div>
+    <div class="modal-musician-name" id="modal-title">—</div>
+
+    <div class="modal-section-label">Badges actifs — tap pour retirer</div>
+    <div class="modal-current-badges" id="modal-current"></div>
+
+    <div class="modal-section-label">Ajouter un badge</div>
+    <div class="modal-add-grid" id="modal-grid"></div>
+
+    <div class="modal-section-label" style="margin-top:18px">Commentaire</div>
+    <input type="text" id="modal-comment" placeholder="Note libre…"
+      style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+             color:var(--white);font-family:'Space Mono',monospace;font-size:12px;
+             padding:10px 14px;outline:none;border-radius:4px;margin-bottom:4px;
+             letter-spacing:0.05em;">
+
+    <button class="modal-close" id="modal-close">Fermer</button>
+  </div>
+</div>
+
+<!-- ═══ PDF OVERLAY ═══ -->
+<div class="pdf-overlay" id="pdf-overlay">
+  <div class="pdf-spinner"></div>
+  <div class="pdf-overlay-text">Génération du PDF…</div>
+</div>
+
+<!-- ═══ HIDDEN PDF TARGET ═══ -->
+<div id="pdf-target"></div>
+
+<script>
+const LABELS = {
+  kick:      'Kick',
+  oh:        'Overhead',
+  di:        'DI',
+  ampli:     'Ampli repiqué',
+  sm58:      'SM58',
+  xlr:       'XLR',
+  jack:      'Jack',
+  nophantom: '⚠ Sans phantom',
+};
+const ALL_TYPES = Object.keys(LABELS);
+
+// Badge color map for PDF rendering
+const BADGE_COLORS = {
+  kick:      { bg: '#3a1212', text: '#e74c3c', border: '#7a2020' },
+  oh:        { bg: '#0e2535', text: '#5dade2', border: '#1e5070' },
+  di:        { bg: '#0e2a18', text: '#58d68d', border: '#1e5a30' },
+  ampli:     { bg: '#2a2008', text: '#c8a84b', border: '#6b5a28' },
+  sm58:      { bg: '#1e0f2e', text: '#bb8fce', border: '#4a2a6e' },
+  jack:      { bg: '#2a1a04', text: '#f0a500', border: '#6a4010' },
+  xlr:       { bg: '#1a1a1a', text: '#aaaaaa', border: '#3a3a3a' },
+  nophantom: { bg: '#2a1e04', text: '#f39c12', border: '#6a4e10' },
+};
+
+let musicians = [
+  { id:1,  name:'Louis Legend — Drums 🥁',      badges:['kick','oh'],           comment:'' },
+  { id:2,  name:'Pr Jo — Bass 🎸',              badges:['di','xlr'],            comment:'' },
+  { id:3,  name:'Piet — Guitar 🎸',             badges:['xlr'],                 comment:'' },
+  { id:4,  name:'El Jefe — Guitar 🎸',          badges:['ampli'],               comment:'' },
+  { id:5,  name:'Pr Thib — Percussions 🥁',     badges:['oh'],                  comment:'' },
+  { id:6,  name:'Elie — Saxophone 🎷',          badges:['xlr','nophantom'],     comment:'' },
+  { id:7,  name:'Seabass — Trumpet 🎺+🎤',      badges:['jack','nophantom','sm58'], comment:'' },
+  { id:8,  name:'Louis 5000 — Lead Vocal 🎤',     badges:['sm58'],                comment:'' },
+  { id:9,  name:'Dr Nico — Chœur 🎤',           badges:['sm58'],                comment:'' },
+  { id:10, name:'Rahul 🎶',                      badges:[],                      comment:'' },
+  { id:11, name:'Day — Accordéon 🪗 (guest)',    badges:['sm58'],                comment:'' },
+  { id:12, name:'Q 🎶 (option)',                 badges:[],                      comment:'' },
+];
+
+let nextId = 13;
+let dragType = null;
+let modalTarget = null;
+
+const tbody      = document.getElementById('musician-tbody');
+const overlay    = document.getElementById('modal-overlay');
+const modalTitle = document.getElementById('modal-title');
+const modalGrid  = document.getElementById('modal-grid');
+const modalCur   = document.getElementById('modal-current');
+const modalCmt   = document.getElementById('modal-comment');
+
+/* ─ utils ─ */
+const isMobile = () => window.innerWidth <= 640 || ('ontouchstart' in window);
+const byId = id => document.getElementById(id);
+
+function updateCount() {
+  byId('badge-count').textContent = musicians.length + ' musicien' + (musicians.length !== 1 ? 's' : '');
+}
+
+/* ─ RENDER TABLE ─ */
+function renderTable(animateLast = false) {
+  tbody.innerHTML = '';
+  musicians.forEach((m, idx) => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = m.id;
+    if (animateLast && idx === musicians.length - 1) tr.classList.add('new-row');
+
+    // #
+    const tdNum = document.createElement('td');
+    tdNum.textContent = idx + 1;
+    tr.appendChild(tdNum);
+
+    // Name
+    const tdName = document.createElement('td');
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.className = 'name-editable';
+    inp.value = m.name; inp.placeholder = 'Nom du musicien…';
+    inp.addEventListener('input', () => m.name = inp.value);
+    tdName.appendChild(inp);
+    tr.appendChild(tdName);
+
+    // Badges / drop cell
+    const tdDrop = document.createElement('td');
+    tdDrop.className = 'drop-cell' + (m.badges.length === 0 ? ' empty' : '');
+    tdDrop.dataset.emptyLabel = isMobile() ? '↓ toucher' : '↓ déposer';
+
+    m.badges.forEach((type, bidx) => {
+      const span = document.createElement('span');
+      span.className = `micro-badge ${type}`;
+      span.textContent = LABELS[type] || type;
+      span.title = 'Cliquer pour retirer';
+      span.addEventListener('click', e => {
+        e.stopPropagation();
+        m.badges.splice(bidx, 1);
+        renderTable();
+      });
+      tdDrop.appendChild(span);
+    });
+
+    // tap → open modal (both mobile & desktop for badge cell)
+    tdDrop.addEventListener('click', e => {
+      if (e.target.classList.contains('micro-badge')) return;
+      openModal(m.id);
+    });
+
+    tr.appendChild(tdDrop);
+
+    // Comment cell
+    const tdCmt = document.createElement('td');
+    tdCmt.className = 'col-comment';
+    const cmtInp = document.createElement('input');
+    cmtInp.type = 'text'; cmtInp.className = 'comment-input';
+    cmtInp.value = m.comment || ''; cmtInp.placeholder = 'Note…';
+    cmtInp.addEventListener('input', () => m.comment = cmtInp.value);
+    tdCmt.appendChild(cmtInp);
+    tr.appendChild(tdCmt);
+
+    // Delete
+    const tdDel = document.createElement('td');
+    const btnDel = document.createElement('button');
+    btnDel.className = 'btn-remove-row'; btnDel.innerHTML = '×'; btnDel.title = 'Supprimer';
+    btnDel.addEventListener('click', () => {
+      musicians = musicians.filter(x => x.id !== m.id);
+      renderTable(); updateCount();
+    });
+    tdDel.appendChild(btnDel);
+    tr.appendChild(tdDel);
+
+    // Desktop drag & drop
+    tr.addEventListener('dragover', e => { e.preventDefault(); tr.classList.add('drag-over'); });
+    tr.addEventListener('dragleave', () => tr.classList.remove('drag-over'));
+    tr.addEventListener('drop', e => {
+      e.preventDefault(); tr.classList.remove('drag-over');
+      if (!dragType) return;
+      m.badges.push(dragType); renderTable();
+    });
+
+    tbody.appendChild(tr);
+  });
+  updateCount();
+}
+
+/* ─ PALETTE ─ */
+function buildPalette() {
+  const pal = byId('palette'); pal.innerHTML = '';
+  ALL_TYPES.forEach(type => {
+    const span = document.createElement('span');
+    span.className = `palette-badge ${type}`;
+    span.draggable = true; span.textContent = LABELS[type]; span.dataset.type = type;
+    span.addEventListener('dragstart', e => { dragType = type; e.dataTransfer.effectAllowed = 'copy'; });
+    span.addEventListener('dragend', () => dragType = null);
+    pal.appendChild(span);
+  });
+}
+
+/* ─ MODAL (works on desktop too now, click on badge cell) ─ */
+function openModal(musicianId) {
+  modalTarget = musicians.find(x => x.id === musicianId);
+  if (!modalTarget) return;
+  renderModal();
+  overlay.classList.add('open');
+  if (isMobile()) modalCmt.focus();
+}
+
+function renderModal() {
+  const m = modalTarget;
+  modalTitle.textContent = m.name || 'Nouveau musicien';
+  modalCmt.value = m.comment || '';
+
+  // current badges
+  modalCur.innerHTML = '';
+  if (m.badges.length === 0) {
+    modalCur.innerHTML = '<span style="font-size:10px;color:var(--muted);font-style:italic">Aucun badge</span>';
+  } else {
+    m.badges.forEach((type, bidx) => {
+      const btn = document.createElement('button');
+      btn.className = `modal-badge-active ${type}`;
+      btn.textContent = LABELS[type];
+      btn.addEventListener('click', () => {
+        m.badges.splice(bidx, 1);
+        renderModal(); renderTable();
+      });
+      modalCur.appendChild(btn);
+    });
+  }
+
+  // add grid
+  modalGrid.innerHTML = '';
+  ALL_TYPES.forEach(type => {
+    const btn = document.createElement('button');
+    btn.className = `modal-add-btn ${type}`;
+    btn.textContent = '+ ' + LABELS[type];
+    btn.addEventListener('click', () => {
+      m.badges.push(type);
+      renderModal(); renderTable();
+    });
+    modalGrid.appendChild(btn);
+  });
+
+  // comment sync
+  modalCmt.oninput = () => { m.comment = modalCmt.value; renderTable(); };
+}
+
+function closeModal() {
+  overlay.classList.remove('open');
+  modalTarget = null;
+}
+
+byId('modal-close').addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+// swipe down to close
+let touchStartY = 0;
+byId('modal-sheet').addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+byId('modal-sheet').addEventListener('touchmove', e => {
+  const dy = e.touches[0].clientY - touchStartY;
+  if (dy > 60) closeModal();
+}, { passive: true });
+
+/* ─ ADD MUSICIAN ─ */
+function addMusician() {
+  musicians.push({ id: nextId++, name: '', badges: [], comment: '' });
+  renderTable(true); updateCount();
+  const inputs = tbody.querySelectorAll('.name-editable');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+byId('btn-add').addEventListener('click', addMusician);
+byId('btn-add-toolbar').addEventListener('click', addMusician);
+
+function checkMobile() {
+  byId('btn-add-toolbar').style.display = isMobile() ? 'inline-flex' : 'none';
+}
+checkMobile();
+window.addEventListener('resize', checkMobile);
+
+/* ─ HEADER SYNC ─ */
+byId('band-name').addEventListener('input', () => {
+  byId('band-title').textContent = byId('band-name').value.toUpperCase() + ' • FICHE TECHNIQUE';
+});
+
+/* ═══════════════════════════════════════════════════════
+   PDF EXPORT — renders a clean styled clone via html2canvas
+   then embeds in jsPDF at A4 landscape
+═══════════════════════════════════════════════════════ */
+byId('btn-pdf').addEventListener('click', async () => {
+  const pdfOverlay = byId('pdf-overlay');
+  pdfOverlay.classList.add('active');
+
+  try {
+    // Build clean HTML for PDF
+    const bandName  = byId('band-name').value;
+    const subtitle  = byId('band-subtitle').value;
+    const retours   = byId('badge-retours').value;
+    const scene     = byId('badge-scene').value;
+    const setup     = byId('badge-setup').value;
+    const phone     = byId('footer-phone').value;
+    const year      = byId('footer-year').value;
+
+    const badgeHtml = (type) => {
+      const c = BADGE_COLORS[type] || { bg:'#222', text:'#aaa', border:'#444' };
+      return `<span style="display:inline-block;padding:3px 9px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;
+              border-radius:2px;margin-right:3px;margin-bottom:2px;font-family:'Space Mono',monospace;
+              background:${c.bg};color:${c.text};border:1px solid ${c.border};">${LABELS[type]}</span>`;
+    };
+
+    const rowsHtml = musicians.map((m, i) => `
+      <tr style="border-bottom:1px solid #2a2a2a;">
+        <td style="padding:10px 12px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:#444440;width:36px;">${i+1}</td>
+        <td style="padding:10px 12px;font-weight:700;font-size:12px;letter-spacing:0.04em;color:#f0ece0;min-width:160px;">${m.name}</td>
+        <td style="padding:10px 12px;min-width:160px;">${m.badges.map(badgeHtml).join('')}</td>
+        <td style="padding:10px 12px;font-size:11px;color:#888880;font-style:italic;min-width:140px;">${m.comment || ''}</td>
+      </tr>`).join('');
+
+    const pdfHtml = `
+      <div style="width:900px;background:#0a0a0a;font-family:'Space Mono',monospace;padding:0;">
+        <!-- HEADER -->
+        <div style="padding:36px 40px 28px;border-bottom:1px solid #c8a84b;position:relative;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:72px;letter-spacing:0.08em;line-height:0.9;
+                      color:#f0ece0;text-shadow:0 0 60px rgba(200,168,75,0.25);">${bandName}</div>
+          <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#D9C382;margin-top:12px;">${subtitle}</div>
+          <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;">
+            ${[musicians.length + ' musiciens', retours, scene, setup].map(t =>
+              `<span style="border:1px solid #6b5a28;padding:4px 12px;font-size:9px;letter-spacing:0.2em;
+                           text-transform:uppercase;color:#c8a84b;background:rgba(200,168,75,0.05);">${t}</span>`
+            ).join('')}
+          </div>
+        </div>
+
+        <!-- TABLE -->
+        <div style="padding:24px 40px 0;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="border-bottom:1px solid #6b5a28;">
+                <th style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.15em;color:#c8a84b;padding:10px 12px;text-align:left;font-weight:normal;width:36px;">#</th>
+                <th style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.15em;color:#c8a84b;padding:10px 12px;text-align:left;font-weight:normal;">Musicien</th>
+                <th style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.15em;color:#c8a84b;padding:10px 12px;text-align:left;font-weight:normal;">Micro / DI</th>
+                <th style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.15em;color:#c8a84b;padding:10px 12px;text-align:left;font-weight:normal;">Notes</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+
+        <!-- FOOTER -->
+        <div style="border-top:1px solid #2a2a2a;padding:16px 40px;display:flex;justify-content:space-between;
+                    align-items:center;font-size:9px;color:#444440;letter-spacing:0.18em;margin-top:24px;">
+          <span style="color:#c8a84b;">${bandName.toUpperCase()} • FICHE TECHNIQUE</span>
+          <span style="color:#c8a84b;">${phone}</span>
+          <span style="color:#D9C382;">${year}</span>
+        </div>
+      </div>`;
+
+    const target = byId('pdf-target');
+    target.innerHTML = pdfHtml;
+
+    await document.fonts.ready;
+    await new Promise(r => setTimeout(r, 300));
+
+    const canvas = await html2canvas(target.firstElementChild, {
+      scale: 2,
+      backgroundColor: '#0a0a0a',
+      useCORS: true,
+      logging: false,
+    });
+
+    target.innerHTML = '';
+
+    const { jsPDF } = window.jspdf;
+    const imgData = canvas.toDataURL('image/png');
+    const imgW = canvas.width / 2;
+    const imgH = canvas.height / 2;
+
+    // A4 landscape = 297 × 210 mm  |  portrait = 210 × 297 mm
+    const pdfW = 297, pdfH = 210;
+    const ratio = Math.min(pdfW / imgW, pdfH / imgH);
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    doc.addImage(imgData, 'PNG', 0, 0, imgW * ratio, imgH * ratio);
+    doc.save(`SSBBB_fiche_technique_${year}.pdf`);
+
+  } catch(err) {
+    console.error('PDF error:', err);
+    alert('Erreur lors de la génération du PDF. Essaie depuis Chrome.');
+  } finally {
+    pdfOverlay.classList.remove('active');
+  }
+});
+
+/* ═══════════════════════════════════════════════
+   SAVE HTML
+═══════════════════════════════════════════════ */
+byId('btn-save').addEventListener('click', () => {
+  const snapshot   = JSON.stringify(musicians);
+  const bandName   = byId('band-name').value;
+  const subtitle   = byId('band-subtitle').value;
+  const retours    = byId('badge-retours').value;
+  const scene      = byId('badge-scene').value;
+  const setup      = byId('badge-setup').value;
+  const phone      = byId('footer-phone').value;
+  const year       = byId('footer-year').value;
+
+  let html = document.documentElement.outerHTML;
+  const esc = s => s.replace(/"/g, '&quot;');
+
+  html = html.replace(/let musicians = \[[\s\S]*?\];/, 'let musicians = ' + snapshot + ';');
+  html = html.replace(/id="band-name" value="[^"]*"/, `id="band-name" value="${esc(bandName)}"`);
+  html = html.replace(/id="band-subtitle" value="[^"]*"/, `id="band-subtitle" value="${esc(subtitle)}"`);
+  html = html.replace(/id="badge-retours" value="[^"]*"/, `id="badge-retours" value="${esc(retours)}"`);
+  html = html.replace(/id="badge-scene" value="[^"]*"/, `id="badge-scene" value="${esc(scene)}"`);
+  html = html.replace(/id="badge-setup" value="[^"]*"/, `id="badge-setup" value="${esc(setup)}"`);
+  html = html.replace(/id="footer-phone" value="[^"]*"/, `id="footer-phone" value="${esc(phone)}"`);
+  html = html.replace(/id="footer-year" value="[^"]*"/, `id="footer-year" value="${esc(year)}"`);
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `SSBBB_fiche_technique_${year}.html`;
+  a.click(); URL.revokeObjectURL(url);
+});
+
+/* ─ INIT ─ */
+buildPalette();
+renderTable();
+</script>
+</body>
+</html>
