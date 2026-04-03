@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <meta name="author" content="Elie JESURAN">
-<meta name="copyright" content="© 2026 Elie JESURA">
+<meta name="copyright" content="© 2026 Elie JESURAN">
 <meta name="date" content="2026-04-01 🐟">
+<meta name="licence" content="GPL">
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SSBBB — Fiche Technique 2026</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -17,15 +18,14 @@
   --black: #0a0a0a; --card: #161616; --border: #2a2a2a;
   --gold: #c8a84b; --gold-dim: #6b5a28; --gold-light: #D9C382;
   --white: #f0ece0; --grey: #888880; --muted: #444440;
+  --accent: #c8a84b;
 }
 
 html { -webkit-text-size-adjust: 100%; }
-
 body {
   background: var(--black); color: var(--white);
   font-family: 'Space Mono', monospace; min-height: 100vh; overflow-x: hidden;
 }
-
 body::before {
   content: ''; position: fixed; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
@@ -57,25 +57,40 @@ header::after {
   letter-spacing: 0.08em; line-height: 0.9; color: var(--white);
   text-shadow: 0 0 80px rgba(200,168,75,0.2); display: block;
 }
-
 .subtitle-input {
   font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase;
   color: var(--gold-light); margin-top: 14px; display: block;
 }
 
+/* ── HEADER BADGES (dynamic) ── */
 .badge-row { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; align-items: center; }
 
 .header-badge {
   border: 1px solid var(--gold-dim); padding: 5px 12px;
   font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--gold); background: rgba(200,168,75,0.05);
+  display: inline-flex; align-items: center; gap: 6px; position: relative;
 }
-
 .badge-editable {
   background: transparent; border: none; color: var(--gold);
   font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.2em;
   text-transform: uppercase; outline: none; min-width: 40px; cursor: text;
 }
+.badge-delete-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--gold-dim); font-size: 13px; line-height: 1; padding: 0 0 0 4px;
+  transition: color 0.15s; display: none;
+}
+.header-badge:hover .badge-delete-btn { display: inline; }
+.badge-delete-btn:hover { color: #e74c3c; }
+
+.btn-add-badge {
+  border: 1px dashed var(--gold-dim); padding: 5px 10px;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold-dim); background: transparent; cursor: pointer;
+  font-family: 'Space Mono', monospace; transition: all 0.15s;
+}
+.btn-add-badge:hover { color: var(--gold); border-color: var(--gold); }
 
 /* ── TOOLBAR ── */
 .toolbar {
@@ -84,7 +99,6 @@ header::after {
   background: rgba(10,10,10,0.97);
   position: sticky; top: 0; z-index: 50;
 }
-
 .toolbar-btn {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 8px 16px; font-family: 'Space Mono', monospace;
@@ -97,6 +111,8 @@ header::after {
 .toolbar-btn:active { transform: scale(0.97); }
 .toolbar-btn.pdf-btn { border-color: rgba(192,57,43,0.5); color: #e74c3c; background: rgba(192,57,43,0.06); }
 .toolbar-btn.pdf-btn:hover { background: rgba(192,57,43,0.14); border-color: #e74c3c; }
+.toolbar-btn.theme-btn { border-color: rgba(93,173,226,0.4); color: #5dade2; background: rgba(93,173,226,0.05); }
+.toolbar-btn.theme-btn:hover { background: rgba(93,173,226,0.12); border-color: #5dade2; }
 
 /* ── MAIN ── */
 main { padding: 32px 40px; max-width: 1100px; margin: 0 auto; }
@@ -110,9 +126,7 @@ thead th {
   color: var(--gold); padding: 10px 14px; text-align: left; font-weight: normal; white-space: nowrap;
 }
 thead th:nth-child(1) { width: 40px; text-align: center; }
-thead th:nth-child(4) { min-width: 140px; }
 thead th:last-child   { width: 32px; }
-
 tbody tr { border-bottom: 1px solid rgba(42,42,42,0.8); transition: background 0.15s; }
 tbody tr.drag-over { background: rgba(200,168,75,0.1) !important; outline: 1px dashed var(--gold-dim); }
 tbody td { padding: 11px 14px; vertical-align: middle; }
@@ -127,7 +141,6 @@ tbody td:first-child { text-align: center; font-family: 'Bebas Neue', sans-serif
 .name-editable:focus { border-bottom-color: var(--gold-dim); }
 .name-editable::placeholder { color: var(--muted); font-weight: normal; }
 
-/* comment cell */
 .comment-input {
   background: transparent; border: none; color: var(--grey);
   font-family: 'Space Mono', monospace; font-size: 11px; font-style: italic;
@@ -137,21 +150,18 @@ tbody td:first-child { text-align: center; font-family: 'Bebas Neue', sans-serif
 .comment-input:focus { border-bottom-color: var(--gold-dim); color: var(--white); }
 .comment-input::placeholder { color: var(--muted); opacity: 0.5; font-size: 10px; }
 
-/* badge cell */
 .drop-cell { min-width: 140px; min-height: 32px; padding: 8px 14px; cursor: pointer; }
 .drop-cell.empty::after {
   content: attr(data-empty-label);
   font-size: 9px; letter-spacing: 0.15em; color: var(--muted); font-style: italic; opacity: 0.45;
 }
 
-/* remove row */
 .btn-remove-row {
   background: none; border: none; cursor: pointer; color: var(--muted);
   font-size: 18px; padding: 2px 5px; transition: color 0.15s; line-height: 1;
 }
 .btn-remove-row:hover { color: #e74c3c; }
 
-/* add row */
 .btn-add-musician {
   display: inline-flex; align-items: center; gap: 10px;
   background: rgba(200,168,75,0.04); border: 1px dashed var(--gold-dim);
@@ -167,11 +177,9 @@ tbody td:first-child { text-align: center; font-family: 'Bebas Neue', sans-serif
   padding: 4px 10px; font-size: 10px; letter-spacing: 0.12em;
   text-transform: uppercase; border-radius: 2px;
   margin-right: 3px; margin-bottom: 2px;
-  cursor: pointer; transition: opacity 0.15s, transform 0.1s; position: relative;
-  white-space: nowrap;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s; position: relative; white-space: nowrap;
 }
 .micro-badge:hover { opacity: 0.7; transform: scale(0.96); }
-
 .kick      { background: rgba(192,57,43,0.2);  color: #e74c3c; border: 1px solid rgba(192,57,43,0.4); }
 .oh        { background: rgba(52,152,219,0.15); color: #5dade2; border: 1px solid rgba(52,152,219,0.3); }
 .di        { background: rgba(39,174,96,0.15);  color: #58d68d; border: 1px solid rgba(39,174,96,0.3); }
@@ -190,12 +198,10 @@ tbody td:first-child { text-align: center; font-family: 'Bebas Neue', sans-serif
 .palette-title-row::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .palette-hint { font-size: 10px; color: var(--muted); margin-bottom: 12px; font-style: italic; }
 .legend-palette { display: flex; flex-wrap: wrap; gap: 8px; }
-
 .palette-badge {
   display: inline-flex; align-items: center;
   padding: 6px 13px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
-  border-radius: 2px; cursor: grab; user-select: none;
-  transition: transform 0.15s, box-shadow 0.15s;
+  border-radius: 2px; cursor: grab; user-select: none; transition: transform 0.15s, box-shadow 0.15s;
 }
 .palette-badge:active { cursor: grabbing; transform: scale(1.07); box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
 .palette-badge:hover  { transform: translateY(-2px); }
@@ -208,6 +214,82 @@ footer {
   flex-wrap: wrap; gap: 10px; margin-top: 20px;
 }
 
+/* ══════════════════════════════════════════════
+   THEME PANEL
+══════════════════════════════════════════════ */
+.theme-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); z-index: 400;
+  align-items: flex-start; justify-content: flex-end;
+}
+.theme-overlay.open { display: flex; }
+
+.theme-panel {
+  background: #141414; border-left: 1px solid var(--border);
+  width: 320px; height: 100vh; overflow-y: auto;
+  padding: 28px 24px 48px; animation: slideInRight 0.25s ease;
+  font-family: 'Inter', sans-serif;
+}
+@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.theme-panel-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 0.15em;
+  color: var(--gold); margin-bottom: 6px;
+}
+.theme-panel-sub {
+  font-size: 10px; color: var(--muted); letter-spacing: 0.15em; margin-bottom: 28px;
+}
+.theme-close {
+  position: absolute; top: 18px; right: 20px;
+  background: none; border: none; color: var(--muted); font-size: 22px;
+  cursor: pointer; transition: color 0.15s; line-height: 1;
+}
+.theme-close:hover { color: var(--white); }
+
+.theme-section-label {
+  font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase;
+  color: var(--gold-dim); margin-bottom: 14px; margin-top: 24px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+
+.theme-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; gap: 12px;
+}
+.theme-row label {
+  font-size: 11px; color: var(--grey); letter-spacing: 0.08em; flex: 1; white-space: nowrap;
+}
+.theme-row input[type="color"] {
+  width: 44px; height: 28px; border: 1px solid var(--border);
+  border-radius: 3px; cursor: pointer; background: none; padding: 2px;
+}
+.theme-row input[type="range"] {
+  flex: 1; accent-color: var(--gold); cursor: pointer;
+}
+.theme-row select {
+  background: #1e1e1e; border: 1px solid var(--border); color: var(--white);
+  font-family: 'Inter', sans-serif; font-size: 11px; padding: 5px 8px;
+  border-radius: 3px; outline: none; cursor: pointer; flex: 1;
+}
+
+/* PRESETS row */
+.preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.preset-btn {
+  padding: 6px 12px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  border-radius: 3px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s;
+  font-family: 'Inter', sans-serif; white-space: nowrap;
+}
+.preset-btn:hover { transform: translateY(-1px); }
+
+.theme-reset {
+  width: 100%; margin-top: 24px; padding: 10px;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  color: var(--muted); font-family: 'Inter', sans-serif; font-size: 11px;
+  letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;
+  border-radius: 3px; transition: all 0.15s;
+}
+.theme-reset:hover { color: var(--white); border-color: var(--grey); }
+
 /* ══════════════════════
    MOBILE BOTTOM SHEET
 ══════════════════════ */
@@ -217,51 +299,31 @@ footer {
   align-items: flex-end; justify-content: center;
 }
 .modal-overlay.open { display: flex; }
-
 .modal-sheet {
   background: #1c1c1c; border: 1px solid var(--border); border-bottom: none;
   border-radius: 16px 16px 0 0; padding: 20px 20px 40px;
   width: 100%; max-width: 600px;
   animation: slideUp 0.22s cubic-bezier(0.32, 0.72, 0, 1);
 }
-
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-.modal-handle {
-  width: 40px; height: 4px; background: var(--border);
-  border-radius: 2px; margin: 0 auto 18px; cursor: grab;
-}
-
-.modal-musician-name {
-  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em;
-  color: var(--gold); margin-bottom: 4px;
-}
-.modal-section-label {
-  font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase;
-  color: var(--muted); margin: 16px 0 10px;
-}
-
-/* Current badges in modal */
+.modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
+.modal-musician-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 4px; }
+.modal-section-label { font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--muted); margin: 16px 0 10px; }
 .modal-current-badges { display: flex; flex-wrap: wrap; gap: 8px; min-height: 36px; margin-bottom: 4px; }
 .modal-badge-active {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 14px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-  border-radius: 4px; cursor: pointer; transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
+  border-radius: 4px; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent;
 }
 .modal-badge-active::after { content: ' ✕'; opacity: 0.6; font-size: 10px; }
 .modal-badge-active:active { transform: scale(0.93); }
-
-/* Add badges grid */
 .modal-add-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .modal-add-btn {
   padding: 12px 10px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-  border-radius: 4px; cursor: pointer; transition: all 0.12s;
-  -webkit-tap-highlight-color: transparent; text-align: center;
-  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; cursor: pointer; transition: all 0.12s; -webkit-tap-highlight-color: transparent;
+  text-align: center; display: flex; align-items: center; justify-content: center;
 }
 .modal-add-btn:active { transform: scale(0.94); opacity: 0.8; }
-
 .modal-close {
   width: 100%; padding: 13px; background: rgba(255,255,255,0.04);
   border: 1px solid var(--border); color: var(--grey);
@@ -270,38 +332,29 @@ footer {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ── PDF LOADING OVERLAY ── */
+/* ── PDF OVERLAY ── */
 .pdf-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.9); z-index: 500;
   flex-direction: column; align-items: center; justify-content: center; gap: 20px;
 }
 .pdf-overlay.active { display: flex; }
-.pdf-overlay-text {
-  font-family: 'Bebas Neue', sans-serif; font-size: 28px;
-  letter-spacing: 0.2em; color: var(--gold);
-}
+.pdf-overlay-text { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.2em; color: var(--gold); }
 .pdf-spinner {
-  width: 40px; height: 40px;
-  border: 3px solid var(--gold-dim);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  width: 40px; height: 40px; border: 3px solid var(--gold-dim);
+  border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── PDF TARGET (hidden clone rendered for pdf) ── */
 #pdf-target {
-  position: fixed; left: -9999px; top: 0;
-  width: 900px; background: #0a0a0a; color: var(--white);
-  font-family: 'Space Mono', monospace; padding: 0;
-  pointer-events: none;
+  position: fixed; left: -9999px; top: 0; width: 900px;
+  background: #0a0a0a; color: var(--white); font-family: 'Space Mono', monospace;
+  padding: 0; pointer-events: none;
 }
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
 @keyframes rowIn  { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
-
 header          { animation: fadeUp 0.5s ease both; }
 .table-wrap     { animation: fadeUp 0.5s 0.1s ease both; }
 .palette-section{ animation: fadeUp 0.5s 0.2s ease both; }
@@ -318,8 +371,8 @@ header          { animation: fadeUp 0.5s ease both; }
   thead th { font-size: 12px; padding: 8px 10px; }
   tbody td { padding: 10px 10px; }
   .drop-cell { min-width: 110px; }
-  /* hide comment col on tiny screens, show in modal */
   .col-comment { display: none; }
+  .theme-panel { width: 100vw; }
 }
 </style>
 </head>
@@ -329,11 +382,8 @@ header          { animation: fadeUp 0.5s ease both; }
 <header>
   <input class="editable-field band-name-input" id="band-name" value="Super Sexy Big Boys Band" placeholder="Nom du groupe">
   <input class="editable-field subtitle-input" id="band-subtitle" value="Fiche Technique / Sounds / 2 juin 2026" placeholder="Sous-titre">
-  <div class="badge-row">
-    <div class="header-badge"><span id="badge-count">12 musiciens</span></div>
-    <div class="header-badge"><input class="badge-editable" id="badge-retours" value="3 retours façade" size="16"></div>
-    <div class="header-badge"><input class="badge-editable" id="badge-scene" value="4m × 3m min" size="10"></div>
-    <div class="header-badge"><input class="badge-editable" id="badge-setup" value="Setup flexible" size="14"></div>
+  <div class="badge-row" id="badge-row">
+    <!-- badges rendered by JS -->
   </div>
 </header>
 
@@ -344,6 +394,9 @@ header          { animation: fadeUp 0.5s ease both; }
   </button>
   <button class="toolbar-btn" id="btn-save">
     <span>💾</span><span class="label">Sauvegarder HTML</span>
+  </button>
+  <button class="toolbar-btn theme-btn" id="btn-theme">
+    <span>🎨</span><span class="label">Thème</span>
   </button>
   <button class="toolbar-btn" id="btn-add-toolbar" style="display:none">
     <span style="font-size:15px">+</span><span class="label">Musicien</span>
@@ -366,12 +419,9 @@ header          { animation: fadeUp 0.5s ease both; }
       <tbody id="musician-tbody"></tbody>
     </table>
   </div>
-
   <button class="btn-add-musician" id="btn-add">
     <span style="font-size:17px;line-height:1">+</span> Ajouter un musicien
   </button>
-
-  <!-- PALETTE desktop -->
   <div class="palette-section">
     <div class="palette-title-row">Palette de badges</div>
     <div class="palette-hint">🖱 Glisse sur une ligne pour ajouter &nbsp;|&nbsp; Clique sur un badge dans le tableau pour le retirer</div>
@@ -385,25 +435,74 @@ header          { animation: fadeUp 0.5s ease both; }
   <div><input class="editable-field" id="footer-year" value="2026" style="color:var(--gold-light);font-size:10px;letter-spacing:0.18em;width:50px" placeholder="Année"></div>
 </footer>
 
-<!-- ═══ MOBILE BOTTOM SHEET ═══ -->
+<!-- ═══ THEME PANEL ═══ -->
+<div class="theme-overlay" id="theme-overlay">
+  <div class="theme-panel" style="position:relative">
+    <button class="theme-close" id="theme-close">×</button>
+    <div class="theme-panel-title">🎨 Thème</div>
+    <div class="theme-panel-sub">Non imprimé dans le PDF</div>
+
+    <div class="theme-section-label">Presets</div>
+    <div class="preset-row" id="preset-row"></div>
+
+    <div class="theme-section-label">Couleurs</div>
+    <div class="theme-row"><label>Fond principal</label><input type="color" id="t-black" value="#0a0a0a"></div>
+    <div class="theme-row"><label>Texte principal</label><input type="color" id="t-white" value="#f0ece0"></div>
+    <div class="theme-row"><label>Couleur accent</label><input type="color" id="t-gold" value="#c8a84b"></div>
+    <div class="theme-row"><label>Accent sombre</label><input type="color" id="t-gold-dim" value="#6b5a28"></div>
+    <div class="theme-row"><label>Accent clair</label><input type="color" id="t-gold-light" value="#D9C382"></div>
+    <div class="theme-row"><label>Bordures</label><input type="color" id="t-border" value="#2a2a2a"></div>
+    <div class="theme-row"><label>Texte secondaire</label><input type="color" id="t-grey" value="#888880"></div>
+    <div class="theme-row"><label>Texte discret</label><input type="color" id="t-muted" value="#444440"></div>
+
+    <div class="theme-section-label">Typographie</div>
+    <div class="theme-row">
+      <label>Police principale</label>
+      <select id="t-font-body">
+        <option value="'Space Mono', monospace">Space Mono</option>
+        <option value="'Courier New', monospace">Courier New</option>
+        <option value="'Inter', sans-serif">Inter</option>
+        <option value="Georgia, serif">Georgia</option>
+      </select>
+    </div>
+    <div class="theme-row">
+      <label>Police titres</label>
+      <select id="t-font-title">
+        <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+        <option value="Georgia, serif">Georgia</option>
+        <option value="Impact, sans-serif">Impact</option>
+        <option value="'Inter', sans-serif">Inter Bold</option>
+      </select>
+    </div>
+
+    <div class="theme-section-label">Effets</div>
+    <div class="theme-row">
+      <label>Grain (texture)</label>
+      <input type="range" id="t-grain" min="0" max="1" step="0.05" value="0.4">
+    </div>
+    <div class="theme-row">
+      <label>Glow titre</label>
+      <input type="range" id="t-glow" min="0" max="1" step="0.05" value="0.5">
+    </div>
+
+    <button class="theme-reset" id="theme-reset">↺ Réinitialiser</button>
+  </div>
+</div>
+
+<!-- ═══ MOBILE BADGE MODAL ═══ -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal-sheet" id="modal-sheet">
-    <div class="modal-handle" id="modal-handle"></div>
+    <div class="modal-handle"></div>
     <div class="modal-musician-name" id="modal-title">—</div>
-
     <div class="modal-section-label">Badges actifs — tap pour retirer</div>
     <div class="modal-current-badges" id="modal-current"></div>
-
     <div class="modal-section-label">Ajouter un badge</div>
     <div class="modal-add-grid" id="modal-grid"></div>
-
     <div class="modal-section-label" style="margin-top:18px">Commentaire</div>
     <input type="text" id="modal-comment" placeholder="Note libre…"
       style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);
              color:var(--white);font-family:'Space Mono',monospace;font-size:12px;
-             padding:10px 14px;outline:none;border-radius:4px;margin-bottom:4px;
-             letter-spacing:0.05em;">
-
+             padding:10px 14px;outline:none;border-radius:4px;margin-bottom:4px;letter-spacing:0.05em;">
     <button class="modal-close" id="modal-close">Fermer</button>
   </div>
 </div>
@@ -414,82 +513,135 @@ header          { animation: fadeUp 0.5s ease both; }
   <div class="pdf-overlay-text">Génération du PDF…</div>
 </div>
 
-<!-- ═══ HIDDEN PDF TARGET ═══ -->
 <div id="pdf-target"></div>
 
 <script>
+/* ══════════════════════════════════════════
+   DATA
+══════════════════════════════════════════ */
 const LABELS = {
-  kick:      'Kick',
-  oh:        'Overhead',
-  di:        'DI',
-  ampli:     'Ampli repiqué',
-  sm58:      'SM58',
-  xlr:       'XLR',
-  jack:      'Jack',
-  nophantom: '⚠ Sans phantom',
+  kick:'Kick', oh:'Overhead', di:'DI', ampli:'Ampli repiqué',
+  sm58:'SM58', xlr:'XLR', jack:'Jack', nophantom:'⚠ Sans phantom',
 };
 const ALL_TYPES = Object.keys(LABELS);
 
-// Badge color map for PDF rendering
 const BADGE_COLORS = {
-  kick:      { bg: '#3a1212', text: '#e74c3c', border: '#7a2020' },
-  oh:        { bg: '#0e2535', text: '#5dade2', border: '#1e5070' },
-  di:        { bg: '#0e2a18', text: '#58d68d', border: '#1e5a30' },
-  ampli:     { bg: '#2a2008', text: '#c8a84b', border: '#6b5a28' },
-  sm58:      { bg: '#1e0f2e', text: '#bb8fce', border: '#4a2a6e' },
-  jack:      { bg: '#2a1a04', text: '#f0a500', border: '#6a4010' },
-  xlr:       { bg: '#1a1a1a', text: '#aaaaaa', border: '#3a3a3a' },
-  nophantom: { bg: '#2a1e04', text: '#f39c12', border: '#6a4e10' },
+  kick:      { bg:'#3a1212', text:'#e74c3c', border:'#7a2020' },
+  oh:        { bg:'#0e2535', text:'#5dade2', border:'#1e5070' },
+  di:        { bg:'#0e2a18', text:'#58d68d', border:'#1e5a30' },
+  ampli:     { bg:'#2a2008', text:'#c8a84b', border:'#6b5a28' },
+  sm58:      { bg:'#1e0f2e', text:'#bb8fce', border:'#4a2a6e' },
+  jack:      { bg:'#2a1a04', text:'#f0a500', border:'#6a4010' },
+  xlr:       { bg:'#1a1a1a', text:'#aaaaaa', border:'#3a3a3a' },
+  nophantom: { bg:'#2a1e04', text:'#f39c12', border:'#6a4e10' },
 };
 
-let musicians = [
-  { id:1,  name:'Louis Legend — Drums 🥁',      badges:['kick','oh'],           comment:'' },
-  { id:2,  name:'Pr Jo — Bass 🎸',              badges:['di','xlr'],            comment:'' },
-  { id:3,  name:'Piet — Guitar 🎸',             badges:['xlr'],                 comment:'' },
-  { id:4,  name:'El Jefe — Guitar 🎸',          badges:['ampli'],               comment:'' },
-  { id:5,  name:'Pr Thib — Percussions 🥁',     badges:['oh'],                  comment:'' },
-  { id:6,  name:'Elie — Saxophone 🎷',          badges:['xlr','nophantom'],     comment:'' },
-  { id:7,  name:'Seabass — Trumpet 🎺+🎤',      badges:['jack','nophantom','sm58'], comment:'' },
-  { id:8,  name:'Louis 5000 — Lead Vocal 🎤',     badges:['sm58'],                comment:'' },
-  { id:9,  name:'Dr Nico — Chœur 🎤',           badges:['sm58'],                comment:'' },
-  { id:10, name:'Rahul 🎶',                      badges:[],                      comment:'' },
-  { id:11, name:'Day — Accordéon 🪗 (guest)',    badges:['sm58'],                comment:'' },
-  { id:12, name:'Q 🎶 (option)',                 badges:[],                      comment:'' },
+// ── Header info badges (dynamic array) ──
+let headerBadges = [
+  { id: 'count', label: null, fixed: true },   // musicien count, not editable label
+  { id: 'h1', label: '3 retours façade' },
+  { id: 'h2', label: '4m × 3m min' },
+  { id: 'h3', label: 'Setup flexible' },
 ];
+let nextBadgeId = 4;
 
+let musicians = [
+  { id:1,  name:'Louis Legend — Drums 🥁',      badges:['kick','oh'],               comment:'' },
+  { id:2,  name:'Pr Jo — Bass 🎸',              badges:['di','xlr'],                comment:'' },
+  { id:3,  name:'Piet — Guitar 🎸',             badges:['xlr'],                     comment:'' },
+  { id:4,  name:'El Jefe — Guitar 🎸',          badges:['ampli'],                   comment:'' },
+  { id:5,  name:'Pr Thib — Percussions 🥁',     badges:['oh'],                      comment:'' },
+  { id:6,  name:'Elie — Saxophone 🎷',          badges:['xlr','nophantom'],         comment:'' },
+  { id:7,  name:'Seabass — Trumpet 🎺+🎤',      badges:['jack','nophantom','sm58'], comment:'' },
+  { id:8,  name:'Louis 5000 — Lead Vocal 🎤',   badges:['sm58'],                    comment:'' },
+  { id:9,  name:'Dr Nico — Chœur 🎤',           badges:['sm58'],                    comment:'' },
+  { id:10, name:'Rahul 🎶',                      badges:[],                          comment:'' },
+  { id:11, name:'Day — Accordéon 🪗 (guest)',    badges:['sm58'],                    comment:'' },
+  { id:12, name:'Q 🎶 (option)',                 badges:[],                          comment:'' },
+];
 let nextId = 13;
 let dragType = null;
 let modalTarget = null;
 
-const tbody      = document.getElementById('musician-tbody');
-const overlay    = document.getElementById('modal-overlay');
-const modalTitle = document.getElementById('modal-title');
-const modalGrid  = document.getElementById('modal-grid');
-const modalCur   = document.getElementById('modal-current');
-const modalCmt   = document.getElementById('modal-comment');
-
-/* ─ utils ─ */
-const isMobile = () => window.innerWidth <= 640 || ('ontouchstart' in window);
 const byId = id => document.getElementById(id);
+const isMobile = () => window.innerWidth <= 640 || ('ontouchstart' in window);
 
+/* ══════════════════════════════════════════
+   HEADER BADGES
+══════════════════════════════════════════ */
 function updateCount() {
-  byId('badge-count').textContent = musicians.length + ' musicien' + (musicians.length !== 1 ? 's' : '');
+  const countEl = byId('badge-count-span');
+  if (countEl) countEl.textContent = musicians.length + ' musicien' + (musicians.length !== 1 ? 's' : '');
 }
 
-/* ─ RENDER TABLE ─ */
+function renderHeaderBadges() {
+  const row = byId('badge-row');
+  row.innerHTML = '';
+
+  headerBadges.forEach(b => {
+    const div = document.createElement('div');
+    div.className = 'header-badge';
+
+    if (b.fixed) {
+      // musician count — not deletable
+      const span = document.createElement('span');
+      span.id = 'badge-count-span';
+      span.textContent = musicians.length + ' musicien' + (musicians.length !== 1 ? 's' : '');
+      div.appendChild(span);
+    } else {
+      const inp = document.createElement('input');
+      inp.className = 'badge-editable';
+      inp.value = b.label;
+      inp.style.minWidth = Math.max(60, b.label.length * 8) + 'px';
+      inp.addEventListener('input', () => {
+        b.label = inp.value;
+        inp.style.minWidth = Math.max(60, inp.value.length * 8) + 'px';
+      });
+      div.appendChild(inp);
+
+      const del = document.createElement('button');
+      del.className = 'badge-delete-btn';
+      del.innerHTML = '×';
+      del.title = 'Supprimer ce badge';
+      del.addEventListener('click', () => {
+        headerBadges = headerBadges.filter(x => x.id !== b.id);
+        renderHeaderBadges();
+      });
+      div.appendChild(del);
+    }
+
+    row.appendChild(div);
+  });
+
+  // + Add badge button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-add-badge';
+  addBtn.textContent = '+ badge';
+  addBtn.addEventListener('click', () => {
+    headerBadges.push({ id: 'h' + nextBadgeId++, label: 'Nouveau' });
+    renderHeaderBadges();
+    // focus last editable
+    const inputs = byId('badge-row').querySelectorAll('.badge-editable');
+    if (inputs.length) { inputs[inputs.length-1].focus(); inputs[inputs.length-1].select(); }
+  });
+  row.appendChild(addBtn);
+}
+
+/* ══════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════ */
 function renderTable(animateLast = false) {
+  const tbody = byId('musician-tbody');
   tbody.innerHTML = '';
   musicians.forEach((m, idx) => {
     const tr = document.createElement('tr');
     tr.dataset.id = m.id;
     if (animateLast && idx === musicians.length - 1) tr.classList.add('new-row');
 
-    // #
     const tdNum = document.createElement('td');
     tdNum.textContent = idx + 1;
     tr.appendChild(tdNum);
 
-    // Name
     const tdName = document.createElement('td');
     const inp = document.createElement('input');
     inp.type = 'text'; inp.className = 'name-editable';
@@ -498,35 +650,21 @@ function renderTable(animateLast = false) {
     tdName.appendChild(inp);
     tr.appendChild(tdName);
 
-    // Badges / drop cell
     const tdDrop = document.createElement('td');
     tdDrop.className = 'drop-cell' + (m.badges.length === 0 ? ' empty' : '');
     tdDrop.dataset.emptyLabel = isMobile() ? '↓ toucher' : '↓ déposer';
-
     m.badges.forEach((type, bidx) => {
       const span = document.createElement('span');
       span.className = `micro-badge ${type}`;
       span.textContent = LABELS[type] || type;
       span.title = 'Cliquer pour retirer';
-      span.addEventListener('click', e => {
-        e.stopPropagation();
-        m.badges.splice(bidx, 1);
-        renderTable();
-      });
+      span.addEventListener('click', e => { e.stopPropagation(); m.badges.splice(bidx, 1); renderTable(); });
       tdDrop.appendChild(span);
     });
-
-    // tap → open modal (both mobile & desktop for badge cell)
-    tdDrop.addEventListener('click', e => {
-      if (e.target.classList.contains('micro-badge')) return;
-      openModal(m.id);
-    });
-
+    tdDrop.addEventListener('click', e => { if (e.target.classList.contains('micro-badge')) return; openModal(m.id); });
     tr.appendChild(tdDrop);
 
-    // Comment cell
-    const tdCmt = document.createElement('td');
-    tdCmt.className = 'col-comment';
+    const tdCmt = document.createElement('td'); tdCmt.className = 'col-comment';
     const cmtInp = document.createElement('input');
     cmtInp.type = 'text'; cmtInp.className = 'comment-input';
     cmtInp.value = m.comment || ''; cmtInp.placeholder = 'Note…';
@@ -534,262 +672,767 @@ function renderTable(animateLast = false) {
     tdCmt.appendChild(cmtInp);
     tr.appendChild(tdCmt);
 
-    // Delete
     const tdDel = document.createElement('td');
     const btnDel = document.createElement('button');
-    btnDel.className = 'btn-remove-row'; btnDel.innerHTML = '×'; btnDel.title = 'Supprimer';
-    btnDel.addEventListener('click', () => {
-      musicians = musicians.filter(x => x.id !== m.id);
-      renderTable(); updateCount();
-    });
+    btnDel.className = 'btn-remove-row'; btnDel.innerHTML = '×';
+    btnDel.addEventListener('click', () => { musicians = musicians.filter(x => x.id !== m.id); renderTable(); updateCount(); });
     tdDel.appendChild(btnDel);
     tr.appendChild(tdDel);
 
-    // Desktop drag & drop
     tr.addEventListener('dragover', e => { e.preventDefault(); tr.classList.add('drag-over'); });
     tr.addEventListener('dragleave', () => tr.classList.remove('drag-over'));
-    tr.addEventListener('drop', e => {
-      e.preventDefault(); tr.classList.remove('drag-over');
-      if (!dragType) return;
-      m.badges.push(dragType); renderTable();
-    });
-
+    tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); if (!dragType) return; m.badges.push(dragType); renderTable(); });
     tbody.appendChild(tr);
   });
   updateCount();
 }
 
-/* ─ PALETTE ─ */
+/* ── Palette ── */
 function buildPalette() {
   const pal = byId('palette'); pal.innerHTML = '';
   ALL_TYPES.forEach(type => {
     const span = document.createElement('span');
-    span.className = `palette-badge ${type}`;
-    span.draggable = true; span.textContent = LABELS[type]; span.dataset.type = type;
+    span.className = `palette-badge ${type}`; span.draggable = true; span.textContent = LABELS[type];
     span.addEventListener('dragstart', e => { dragType = type; e.dataTransfer.effectAllowed = 'copy'; });
     span.addEventListener('dragend', () => dragType = null);
     pal.appendChild(span);
   });
 }
 
-/* ─ MODAL (works on desktop too now, click on badge cell) ─ */
+/* ── Modal ── */
 function openModal(musicianId) {
   modalTarget = musicians.find(x => x.id === musicianId);
   if (!modalTarget) return;
   renderModal();
-  overlay.classList.add('open');
-  if (isMobile()) modalCmt.focus();
+  byId('modal-overlay').classList.add('open');
 }
 
 function renderModal() {
   const m = modalTarget;
-  modalTitle.textContent = m.name || 'Nouveau musicien';
-  modalCmt.value = m.comment || '';
-
-  // current badges
-  modalCur.innerHTML = '';
-  if (m.badges.length === 0) {
-    modalCur.innerHTML = '<span style="font-size:10px;color:var(--muted);font-style:italic">Aucun badge</span>';
+  byId('modal-title').textContent = m.name || 'Nouveau musicien';
+  byId('modal-comment').value = m.comment || '';
+  const cur = byId('modal-current'); cur.innerHTML = '';
+  if (!m.badges.length) {
+    cur.innerHTML = '<span style="font-size:10px;color:var(--muted);font-style:italic">Aucun badge</span>';
   } else {
     m.badges.forEach((type, bidx) => {
       const btn = document.createElement('button');
-      btn.className = `modal-badge-active ${type}`;
-      btn.textContent = LABELS[type];
-      btn.addEventListener('click', () => {
-        m.badges.splice(bidx, 1);
-        renderModal(); renderTable();
-      });
-      modalCur.appendChild(btn);
+      btn.className = `modal-badge-active ${type}`; btn.textContent = LABELS[type];
+      btn.addEventListener('click', () => { m.badges.splice(bidx, 1); renderModal(); renderTable(); });
+      cur.appendChild(btn);
     });
   }
-
-  // add grid
-  modalGrid.innerHTML = '';
+  const grid = byId('modal-grid'); grid.innerHTML = '';
   ALL_TYPES.forEach(type => {
     const btn = document.createElement('button');
-    btn.className = `modal-add-btn ${type}`;
-    btn.textContent = '+ ' + LABELS[type];
-    btn.addEventListener('click', () => {
-      m.badges.push(type);
-      renderModal(); renderTable();
-    });
-    modalGrid.appendChild(btn);
+    btn.className = `modal-add-btn ${type}`; btn.textContent = '+ ' + LABELS[type];
+    btn.addEventListener('click', () => { m.badges.push(type); renderModal(); renderTable(); });
+    grid.appendChild(btn);
   });
-
-  // comment sync
-  modalCmt.oninput = () => { m.comment = modalCmt.value; renderTable(); };
+  byId('modal-comment').oninput = () => { m.comment = byId('modal-comment').value; renderTable(); };
 }
 
-function closeModal() {
-  overlay.classList.remove('open');
-  modalTarget = null;
-}
-
+function closeModal() { byId('modal-overlay').classList.remove('open'); modalTarget = null; }
 byId('modal-close').addEventListener('click', closeModal);
-overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-
-// swipe down to close
+byId('modal-overlay').addEventListener('click', e => { if (e.target === byId('modal-overlay')) closeModal(); });
 let touchStartY = 0;
 byId('modal-sheet').addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
-byId('modal-sheet').addEventListener('touchmove', e => {
-  const dy = e.touches[0].clientY - touchStartY;
-  if (dy > 60) closeModal();
-}, { passive: true });
+byId('modal-sheet').addEventListener('touchmove', e => { if (e.touches[0].clientY - touchStartY > 60) closeModal(); }, { passive: true });
 
-/* ─ ADD MUSICIAN ─ */
+/* ── Add musician ── */
 function addMusician() {
   musicians.push({ id: nextId++, name: '', badges: [], comment: '' });
   renderTable(true); updateCount();
-  const inputs = tbody.querySelectorAll('.name-editable');
-  if (inputs.length) inputs[inputs.length - 1].focus();
+  const inputs = byId('musician-tbody').querySelectorAll('.name-editable');
+  if (inputs.length) inputs[inputs.length-1].focus();
 }
-
 byId('btn-add').addEventListener('click', addMusician);
 byId('btn-add-toolbar').addEventListener('click', addMusician);
 
-function checkMobile() {
-  byId('btn-add-toolbar').style.display = isMobile() ? 'inline-flex' : 'none';
-}
-checkMobile();
-window.addEventListener('resize', checkMobile);
+function checkMobile() { byId('btn-add-toolbar').style.display = isMobile() ? 'inline-flex' : 'none'; }
+checkMobile(); window.addEventListener('resize', checkMobile);
 
-/* ─ HEADER SYNC ─ */
 byId('band-name').addEventListener('input', () => {
   byId('band-title').textContent = byId('band-name').value.toUpperCase() + ' • FICHE TECHNIQUE';
 });
 
-/* ═══════════════════════════════════════════════════════
-   PDF EXPORT — renders a clean styled clone via html2canvas
-   then embeds in jsPDF at A4 landscape
-═══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   THEME ENGINE
+══════════════════════════════════════════ */
+const CSS_VARS = {
+  't-black':      '--black',
+  't-white':      '--white',
+  't-gold':       '--gold',
+  't-gold-dim':   '--gold-dim',
+  't-gold-light': '--gold-light',
+  't-border':     '--border',
+  't-grey':       '--grey',
+  't-muted':      '--muted',
+};
+
+const DEFAULT_THEME = {
+  't-black':      '#0a0a0a',
+  't-white':      '#f0ece0',
+  't-gold':       '#c8a84b',
+  't-gold-dim':   '#6b5a28',
+  't-gold-light': '#D9C382',
+  't-border':     '#2a2a2a',
+  't-grey':       '#888880',
+  't-muted':      '#444440',
+  't-font-body':  "'Space Mono', monospace",
+  't-font-title': "'Bebas Neue', sans-serif",
+  't-grain':      '0.4',
+  't-glow':       '0.5',
+};
+
+const PRESETS = [
+  {
+    name: '🖤 Dark Gold', color: '#c8a84b',
+    values: { ...DEFAULT_THEME },
+  },
+  {
+    name: '❄️ Ice Blue', color: '#5dade2',
+    values: {
+      't-black':'#060e18','t-white':'#e8f4fd','t-gold':'#5dade2','t-gold-dim':'#1e5070',
+      't-gold-light':'#a9d4f0','t-border':'#0e2535','t-grey':'#7fa8c8','t-muted':'#2a4a6a',
+      't-font-body':"'Space Mono', monospace",'t-font-title':"'Bebas Neue', sans-serif",
+      't-grain':'0.3','t-glow':'0.4',
+    },
+  },
+  {
+    name: '🩸 Rouge', color: '#e74c3c',
+    values: {
+      't-black':'#100808','t-white':'#f8eded','t-gold':'#e74c3c','t-gold-dim':'#7a1a1a',
+      't-gold-light':'#f0a090','t-border':'#2e0e0e','t-grey':'#a08080','t-muted':'#4a2020',
+      't-font-body':"'Space Mono', monospace",'t-font-title':"'Bebas Neue', sans-serif",
+      't-grain':'0.4','t-glow':'0.6',
+    },
+  },
+  {
+    name: '🌿 Vert', color: '#58d68d',
+    values: {
+      't-black':'#060f0a','t-white':'#edf8f2','t-gold':'#58d68d','t-gold-dim':'#1e5a30',
+      't-gold-light':'#a0e8c0','t-border':'#0e2a18','t-grey':'#7aba9a','t-muted':'#2a4a30',
+      't-font-body':"'Space Mono', monospace",'t-font-title':"'Bebas Neue', sans-serif",
+      't-grain':'0.3','t-glow':'0.4',
+    },
+  },
+  {
+    name: '☁️ Blanc', color: '#888',
+    values: {
+      't-black':'#f5f5f0','t-white':'#1a1a1a','t-gold':'#333333','t-gold-dim':'#999999',
+      't-gold-light':'#555555','t-border':'#dddddd','t-grey':'#666666','t-muted':'#aaaaaa',
+      't-font-body':"'Inter', sans-serif",'t-font-title':"'Bebas Neue', sans-serif",
+      't-grain':'0.1','t-glow':'0.0',
+    },
+  },
+];
+
+function applyTheme(values) {
+  const root = document.documentElement;
+  Object.entries(CSS_VARS).forEach(([inputId, cssVar]) => {
+    if (values[inputId]) root.style.setProperty(cssVar, values[inputId]);
+  });
+  // font
+  if (values['t-font-body'])  document.body.style.fontFamily = values['t-font-body'];
+  if (values['t-font-title']) {
+    document.querySelectorAll('.band-name-input, thead th, .modal-musician-name, .theme-panel-title')
+      .forEach(el => el.style.fontFamily = values['t-font-title']);
+  }
+  // grain
+  const grain = parseFloat(values['t-grain'] || 0.4);
+  document.body.style.setProperty('--grain-opacity', grain);
+  const before = document.querySelector('body::before');  // CSS pseudo - can't JS style, use variable trick
+  // We apply via a data attribute and CSS var fallback
+  document.documentElement.style.setProperty('--grain-val', grain);
+
+  // glow
+  const glow = parseFloat(values['t-glow'] || 0.5);
+  document.querySelectorAll('.band-name-input').forEach(el =>
+    el.style.textShadow = `0 0 80px rgba(200,168,75,${glow * 0.4})`
+  );
+
+  // sync pickers
+  Object.keys(CSS_VARS).forEach(id => {
+    const el = byId(id); if (el && values[id]) el.value = values[id];
+  });
+  if (values['t-font-body'])  byId('t-font-body').value  = values['t-font-body'];
+  if (values['t-font-title']) byId('t-font-title').value = values['t-font-title'];
+  if (values['t-grain']) byId('t-grain').value = values['t-grain'];
+  if (values['t-glow'])  byId('t-glow').value  = values['t-glow'];
+}
+
+function currentTheme() {
+  const vals = {};
+  Object.keys(DEFAULT_THEME).forEach(k => {
+    const el = byId(k);
+    if (el) vals[k] = el.value;
+  });
+  return vals;
+}
+
+// Wire up color pickers
+Object.entries(CSS_VARS).forEach(([inputId, cssVar]) => {
+  const el = byId(inputId);
+  if (el) el.addEventListener('input', () => {
+    document.documentElement.style.setProperty(cssVar, el.value);
+  });
+});
+
+// Font selects
+byId('t-font-body').addEventListener('change', () => {
+  document.body.style.fontFamily = byId('t-font-body').value;
+});
+byId('t-font-title').addEventListener('change', () => {
+  const f = byId('t-font-title').value;
+  document.querySelectorAll('.band-name-input, thead th, .modal-musician-name, .theme-panel-title')
+    .forEach(el => el.style.fontFamily = f);
+});
+
+// Grain & glow sliders (visual only, not pure CSS vars so handled manually)
+byId('t-grain').addEventListener('input', () => {
+  document.documentElement.style.setProperty('--grain-val', byId('t-grain').value);
+});
+byId('t-glow').addEventListener('input', () => {
+  const g = parseFloat(byId('t-glow').value);
+  document.querySelectorAll('.band-name-input').forEach(el =>
+    el.style.textShadow = `0 0 80px rgba(200,168,75,${g * 0.4})`
+  );
+});
+
+// Build presets
+const presetRow = byId('preset-row');
+PRESETS.forEach(p => {
+  const btn = document.createElement('button');
+  btn.className = 'preset-btn';
+  btn.textContent = p.name;
+  btn.style.background = p.color + '22';
+  btn.style.border = `1px solid ${p.color}66`;
+  btn.style.color = p.color;
+  btn.addEventListener('click', () => applyTheme(p.values));
+  presetRow.appendChild(btn);
+});
+
+// Reset
+byId('theme-reset').addEventListener('click', () => applyTheme(DEFAULT_THEME));
+
+// Open / close theme panel
+byId('btn-theme').addEventListener('click', () => byId('theme-overlay').classList.add('open'));
+byId('theme-close').addEventListener('click', () => byId('theme-overlay').classList.remove('open'));
+byId('theme-overlay').addEventListener('click', e => { if (e.target === byId('theme-overlay')) byId('theme-overlay').classList.remove('open'); });
+
+/* ══════════════════════════════════════════
+   PDF EXPORT
+══════════════════════════════════════════ */
+
 byId('btn-pdf').addEventListener('click', async () => {
   const pdfOverlay = byId('pdf-overlay');
   pdfOverlay.classList.add('active');
 
   try {
-    // Build clean HTML for PDF
-    const bandName  = byId('band-name').value;
-    const subtitle  = byId('band-subtitle').value;
-    const retours   = byId('badge-retours').value;
-    const scene     = byId('badge-scene').value;
-    const setup     = byId('badge-setup').value;
-    const phone     = byId('footer-phone').value;
-    const year      = byId('footer-year').value;
+    const bandName = byId('band-name').value || 'GROUPE';
+    const subtitle = byId('band-subtitle').value || 'FICHE TECHNIQUE';
+    const phone    = byId('footer-phone').value || '';
+    const year     = byId('footer-year').value || new Date().getFullYear();
 
-    const badgeHtml = (type) => {
-      const c = BADGE_COLORS[type] || { bg:'#222', text:'#aaa', border:'#444' };
-      return `<span style="display:inline-block;padding:3px 9px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;
-              border-radius:2px;margin-right:3px;margin-bottom:2px;font-family:'Space Mono',monospace;
-              background:${c.bg};color:${c.text};border:1px solid ${c.border};">${LABELS[type]}</span>`;
+    const extraBadges = headerBadges
+      .filter(b => !b.fixed)
+      .map(b => b.label);
+
+    const allBadgeLabels = [`${musicians.length} musiciens`, ...extraBadges];
+
+    const style = getComputedStyle(document.documentElement);
+    const pdfBg          = style.getPropertyValue('--black').trim() || '#0a0a0a';
+    const pdfAccent      = style.getPropertyValue('--gold').trim() || '#c8a84b';
+    const pdfAccentDim   = style.getPropertyValue('--gold-dim').trim() || '#6b5a28';
+    const pdfAccentLight = style.getPropertyValue('--gold-light').trim() || '#D9C382';
+    const pdfText        = style.getPropertyValue('--white').trim() || '#f0ece0';
+    const pdfBorder      = style.getPropertyValue('--border').trim() || '#2a2a2a';
+    const pdfGrey        = style.getPropertyValue('--grey').trim() || '#888880';
+
+    const A4_W_MM = 210;
+    const A4_H_MM = 297;
+    const A4_W_PX = 794;
+    const A4_H_PX = 1123;
+    const SCALE   = 2;
+
+    const target = byId('pdf-target');
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function truncate(str, max = 70) {
+      const s = String(str ?? '');
+      return s.length > max ? s.slice(0, max - 1) + '…' : s;
+    }
+
+    const badgeHtml = type => {
+      const c = BADGE_COLORS[type] || { bg: '#222', text: '#aaa', border: '#444' };
+      return `<span style="
+        display:inline-block;
+        padding:3px 8px;
+        font-size:8px;
+        letter-spacing:0.10em;
+        text-transform:uppercase;
+        border-radius:2px;
+        margin-right:3px;
+        margin-bottom:3px;
+        font-family:'Space Mono',monospace;
+        background:${c.bg};
+        color:${c.text};
+        border:1px solid ${c.border};
+        white-space:nowrap;
+      ">${escapeHtml(LABELS[type] || type)}</span>`;
     };
 
-    const rowsHtml = musicians.map((m, i) => `
-      <tr style="border-bottom:1px solid #2a2a2a;">
-        <td style="padding:10px 12px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:#444440;width:36px;">${i+1}</td>
-        <td style="padding:10px 12px;font-weight:700;font-size:12px;letter-spacing:0.04em;color:#f0ece0;min-width:160px;">${m.name}</td>
-        <td style="padding:10px 12px;min-width:160px;">${m.badges.map(badgeHtml).join('')}</td>
-        <td style="padding:10px 12px;font-size:11px;color:#888880;font-style:italic;min-width:140px;">${m.comment || ''}</td>
-      </tr>`).join('');
+    const badgesBarHtml = allBadgeLabels.map(t => `
+      <span style="
+        border:1px solid ${pdfAccentDim};
+        padding:4px 10px;
+        font-size:8px;
+        letter-spacing:0.18em;
+        text-transform:uppercase;
+        color:${pdfAccent};
+        background:rgba(200,168,75,0.05);
+        white-space:nowrap;
+      ">${escapeHtml(t)}</span>
+    `).join('');
 
-    const pdfHtml = `
-      <div style="width:900px;background:#0a0a0a;font-family:'Space Mono',monospace;padding:0;">
-        <!-- HEADER -->
-        <div style="padding:36px 40px 28px;border-bottom:1px solid #c8a84b;position:relative;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:72px;letter-spacing:0.08em;line-height:0.9;
-                      color:#f0ece0;text-shadow:0 0 60px rgba(200,168,75,0.25);">${bandName}</div>
-          <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#D9C382;margin-top:12px;">${subtitle}</div>
-          <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;">
-            ${[musicians.length + ' musiciens', retours, scene, setup].map(t =>
-              `<span style="border:1px solid #6b5a28;padding:4px 12px;font-size:9px;letter-spacing:0.2em;
-                           text-transform:uppercase;color:#c8a84b;background:rgba(200,168,75,0.05);">${t}</span>`
-            ).join('')}
+    function buildRowsHtml(pageMusicians, startIndex) {
+      return pageMusicians.map((m, i) => `
+        <tr style="border-bottom:1px solid ${pdfBorder}; vertical-align:top;">
+          <td style="
+            padding:7px 10px;
+            text-align:center;
+            font-family:'Bebas Neue',sans-serif;
+            font-size:15px;
+            color:${pdfGrey};
+            width:34px;
+          ">${startIndex + i + 1}</td>
+
+          <td style="
+            padding:7px 10px;
+            font-weight:700;
+            font-size:11px;
+            color:${pdfText};
+            width:120px;
+            word-break:break-word;
+          ">${escapeHtml(m.name || '')}</td>
+
+          <td style="
+            padding:7px 10px;
+            width:290px;
+            word-break:break-word;
+          ">${(m.badges || []).map(badgeHtml).join('')}</td>
+
+          <td style="
+            padding:7px 10px;
+            font-size:10px;
+            color:${pdfGrey};
+            font-style:italic;
+            word-break:break-word;
+          ">${escapeHtml(truncate(m.comment || '', 80))}</td>
+        </tr>
+      `).join('');
+    }
+
+    function buildPageHtml(pageMusicians, startIndex, pageIndex, totalPages) {
+      const showBadgesBar = pageIndex === 0;
+      const rowsHtml = buildRowsHtml(pageMusicians, startIndex);
+
+      return `
+        <div style="
+          width:${A4_W_PX}px;
+          height:${A4_H_PX}px;
+          box-sizing:border-box;
+          overflow:hidden;
+          background:${pdfBg};
+          color:${pdfText};
+          font-family:'Space Mono',monospace;
+          display:flex;
+          flex-direction:column;
+        ">
+          <div style="
+            padding:${pageIndex === 0 ? '34px 40px 20px' : '24px 40px 14px'};
+            border-bottom:1px solid ${pdfAccent};
+            flex:0 0 auto;
+          ">
+            <div style="
+              font-family:'Bebas Neue',sans-serif;
+              font-size:${pageIndex === 0 ? '68px' : '42px'};
+              letter-spacing:0.08em;
+              line-height:0.9;
+              color:${pdfText};
+            ">${escapeHtml(bandName)}</div>
+
+            <div style="
+              font-size:${pageIndex === 0 ? '10px' : '9px'};
+              letter-spacing:0.35em;
+              text-transform:uppercase;
+              color:${pdfAccentLight};
+              margin-top:10px;
+            ">${escapeHtml(subtitle)}</div>
+
+            ${showBadgesBar ? `
+              <div style="
+                display:flex;
+                gap:8px;
+                margin-top:14px;
+                flex-wrap:wrap;
+              ">${badgesBarHtml}</div>
+            ` : ''}
+          </div>
+
+          <div style="
+            padding:16px 40px 0;
+            flex:1 1 auto;
+            overflow:hidden;
+          ">
+            <table style="
+              width:100%;
+              border-collapse:collapse;
+              font-size:11px;
+              table-layout:fixed;
+            ">
+              <thead>
+                <tr style="border-bottom:1px solid ${pdfAccentDim};">
+                  <th style="
+                    font-family:'Bebas Neue',sans-serif;
+                    font-size:12px;
+                    letter-spacing:0.14em;
+                    color:${pdfAccent};
+                    padding:8px 10px;
+                    text-align:left;
+                    font-weight:normal;
+                    width:34px;
+                  ">#</th>
+
+                  <th style="
+                    font-family:'Bebas Neue',sans-serif;
+                    font-size:12px;
+                    letter-spacing:0.14em;
+                    color:${pdfAccent};
+                    padding:8px 10px;
+                    text-align:left;
+                    font-weight:normal;
+                    width:120px;
+                  ">Musicien</th>
+
+                  <th style="
+                    font-family:'Bebas Neue',sans-serif;
+                    font-size:12px;
+                    letter-spacing:0.14em;
+                    color:${pdfAccent};
+                    padding:8px 10px;
+                    text-align:left;
+                    font-weight:normal;
+                    width:290px;
+                  ">Micro / DI</th>
+
+                  <th style="
+                    font-family:'Bebas Neue',sans-serif;
+                    font-size:12px;
+                    letter-spacing:0.14em;
+                    color:${pdfAccent};
+                    padding:8px 10px;
+                    text-align:left;
+                    font-weight:normal;
+                  ">Notes</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+
+          <div style="
+            border-top:1px solid ${pdfBorder};
+            padding:14px 40px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            font-size:8px;
+            letter-spacing:0.16em;
+            flex:0 0 auto;
+            margin-top:12px;
+          ">
+            <span style="color:${pdfAccent};">
+              ${escapeHtml(bandName.toUpperCase())} • FICHE TECHNIQUE
+            </span>
+            <span style="color:${pdfAccent};">
+              ${escapeHtml(phone)}
+            </span>
+            <span style="color:${pdfAccentLight};">
+              ${escapeHtml(String(year))} • ${pageIndex + 1}/${totalPages}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    function makeMeasurementPage() {
+      const wrapper = document.createElement('div');
+      wrapper.style.width = `${A4_W_PX}px`;
+      wrapper.style.height = `${A4_H_PX}px`;
+      wrapper.style.boxSizing = 'border-box';
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '-99999px';
+      wrapper.style.top = '0';
+      wrapper.style.background = pdfBg;
+      wrapper.style.color = pdfText;
+      wrapper.style.fontFamily = "'Space Mono', monospace";
+      wrapper.style.display = 'flex';
+      wrapper.style.flexDirection = 'column';
+
+      wrapper.innerHTML = `
+        <div style="padding:34px 40px 20px;border-bottom:1px solid ${pdfAccent};flex:0 0 auto;">
+          <div style="
+            font-family:'Bebas Neue',sans-serif;
+            font-size:68px;
+            letter-spacing:0.08em;
+            line-height:0.9;
+            color:${pdfText};
+          ">${escapeHtml(bandName)}</div>
+
+          <div style="
+            font-size:10px;
+            letter-spacing:0.35em;
+            text-transform:uppercase;
+            color:${pdfAccentLight};
+            margin-top:10px;
+          ">${escapeHtml(subtitle)}</div>
+
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+            ${badgesBarHtml}
           </div>
         </div>
 
-        <!-- TABLE -->
-        <div style="padding:24px 40px 0;">
-          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <div id="measure-body" style="
+          padding:16px 40px 0;
+          flex:1 1 auto;
+          overflow:hidden;
+        ">
+          <table style="
+            width:100%;
+            border-collapse:collapse;
+            font-size:11px;
+            table-layout:fixed;
+          ">
             <thead>
-              <tr style="border-bottom:1px solid #6b5a28;">
-                <th style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.15em;color:#c8a84b;padding:10px 12px;text-align:left;font-weight:normal;width:36px;">#</th>
-                <th style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.15em;color:#c8a84b;padding:10px 12px;text-align:left;font-weight:normal;">Musicien</th>
-                <th style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.15em;color:#c8a84b;padding:10px 12px;text-align:left;font-weight:normal;">Micro / DI</th>
-                <th style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.15em;color:#c8a84b;padding:10px 12px;text-align:left;font-weight:normal;">Notes</th>
+              <tr style="border-bottom:1px solid ${pdfAccentDim};">
+                <th style="padding:8px 10px;text-align:left;font-weight:normal;width:34px;color:${pdfAccent};font-family:'Bebas Neue',sans-serif;font-size:12px;">#</th>
+                <th style="padding:8px 10px;text-align:left;font-weight:normal;width:120px;color:${pdfAccent};font-family:'Bebas Neue',sans-serif;font-size:12px;">Musicien</th>
+                <th style="padding:8px 10px;text-align:left;font-weight:normal;width:290px;color:${pdfAccent};font-family:'Bebas Neue',sans-serif;font-size:12px;">Micro / DI</th>
+                <th style="padding:8px 10px;text-align:left;font-weight:normal;color:${pdfAccent};font-family:'Bebas Neue',sans-serif;font-size:12px;">Notes</th>
               </tr>
             </thead>
-            <tbody>${rowsHtml}</tbody>
+            <tbody id="measure-tbody"></tbody>
           </table>
         </div>
 
-        <!-- FOOTER -->
-        <div style="border-top:1px solid #2a2a2a;padding:16px 40px;display:flex;justify-content:space-between;
-                    align-items:center;font-size:9px;color:#444440;letter-spacing:0.18em;margin-top:24px;">
-          <span style="color:#c8a84b;">${bandName.toUpperCase()} • FICHE TECHNIQUE</span>
-          <span style="color:#c8a84b;">${phone}</span>
-          <span style="color:#D9C382;">${year}</span>
+        <div style="
+          border-top:1px solid ${pdfBorder};
+          padding:14px 40px;
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          font-size:8px;
+          letter-spacing:0.16em;
+          flex:0 0 auto;
+          margin-top:12px;
+        ">
+          <span style="color:${pdfAccent};">${escapeHtml(bandName.toUpperCase())} • FICHE TECHNIQUE</span>
+          <span style="color:${pdfAccent};">${escapeHtml(phone)}</span>
+          <span style="color:${pdfAccentLight};">${escapeHtml(String(year))}</span>
         </div>
-      </div>`;
+      `;
 
-    const target = byId('pdf-target');
-    target.innerHTML = pdfHtml;
+      document.body.appendChild(wrapper);
+      return wrapper;
+    }
 
-    await document.fonts.ready;
-    await new Promise(r => setTimeout(r, 300));
+    function buildSingleMeasureRow(m, absoluteIndex) {
+      return `
+        <tr style="border-bottom:1px solid ${pdfBorder}; vertical-align:top;">
+          <td style="
+            padding:7px 10px;
+            text-align:center;
+            font-family:'Bebas Neue',sans-serif;
+            font-size:15px;
+            color:${pdfGrey};
+            width:34px;
+          ">${absoluteIndex + 1}</td>
 
-    const canvas = await html2canvas(target.firstElementChild, {
-      scale: 2,
-      backgroundColor: '#0a0a0a',
-      useCORS: true,
-      logging: false,
+          <td style="
+            padding:7px 10px;
+            font-weight:700;
+            font-size:11px;
+            color:${pdfText};
+            width:120px;
+            word-break:break-word;
+          ">${escapeHtml(m.name || '')}</td>
+
+          <td style="
+            padding:7px 10px;
+            width:290px;
+            word-break:break-word;
+          ">${(m.badges || []).map(badgeHtml).join('')}</td>
+
+          <td style="
+            padding:7px 10px;
+            font-size:10px;
+            color:${pdfGrey};
+            font-style:italic;
+            word-break:break-word;
+          ">${escapeHtml(truncate(m.comment || '', 80))}</td>
+        </tr>
+      `;
+    }
+
+    async function paginateMusiciansAutomatically() {
+      const pages = [];
+      let cursor = 0;
+
+      while (cursor < musicians.length) {
+        const measurementPage = makeMeasurementPage();
+        const tbody = measurementPage.querySelector('#measure-tbody');
+        const body = measurementPage.querySelector('#measure-body');
+
+        await document.fonts.ready;
+        await new Promise(r => setTimeout(r, 50));
+
+        const pageRows = [];
+        let lastGoodHtml = '';
+
+        while (cursor < musicians.length) {
+          pageRows.push(musicians[cursor]);
+          tbody.innerHTML = pageRows
+            .map((m, i) => buildSingleMeasureRow(m, (cursor - pageRows.length + 1) + i))
+            .join('');
+
+          await new Promise(r => requestAnimationFrame(r));
+
+          const table = tbody.closest('table');
+          const tableBottom = table.getBoundingClientRect().bottom;
+          const bodyBottom = body.getBoundingClientRect().bottom;
+
+          if (tableBottom > bodyBottom - 8) {
+            pageRows.pop();
+            tbody.innerHTML = lastGoodHtml;
+            break;
+          }
+
+          lastGoodHtml = tbody.innerHTML;
+          cursor++;
+        }
+
+        if (pageRows.length === 0 && cursor < musicians.length) {
+          pageRows.push(musicians[cursor]);
+          cursor++;
+        }
+
+        pages.push(pageRows);
+        measurementPage.remove();
+      }
+
+      if (pages.length === 0) {
+        pages.push([]);
+      }
+
+      return pages;
+    }
+
+    const pages = await paginateMusiciansAutomatically();
+    const totalPages = pages.length;
+    const { jsPDF } = window.jspdf;
+
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
     });
 
+    target.style.width = `${A4_W_PX}px`;
+    target.style.position = 'fixed';
+    target.style.left = '-99999px';
+    target.style.top = '0';
+
+    let startIndex = 0;
+
+    for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+      const html = buildPageHtml(pages[pageIndex], startIndex, pageIndex, totalPages);
+      target.innerHTML = html;
+
+      await document.fonts.ready;
+      await new Promise(r => setTimeout(r, 120));
+
+      const canvas = await html2canvas(target.firstElementChild, {
+        scale: SCALE,
+        backgroundColor: pdfBg,
+        useCORS: true,
+        logging: false,
+        width: A4_W_PX,
+        height: A4_H_PX,
+        windowWidth: A4_W_PX,
+        windowHeight: A4_H_PX
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+      if (pageIndex > 0) {
+        doc.addPage('a4', 'portrait');
+      }
+
+      doc.addImage(imgData, 'JPEG', 0, 0, A4_W_MM, A4_H_MM);
+      startIndex += pages[pageIndex].length;
+    }
+
     target.innerHTML = '';
+    target.style.width = '';
+    target.style.position = '';
+    target.style.left = '';
+    target.style.top = '';
 
-    const { jsPDF } = window.jspdf;
-    const imgData = canvas.toDataURL('image/png');
-    const imgW = canvas.width / 2;
-    const imgH = canvas.height / 2;
-
-    // A4 landscape = 297 × 210 mm  |  portrait = 210 × 297 mm
-    const pdfW = 297, pdfH = 210;
-    const ratio = Math.min(pdfW / imgW, pdfH / imgH);
-
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    doc.addImage(imgData, 'PNG', 0, 0, imgW * ratio, imgH * ratio);
     doc.save(`SSBBB_fiche_technique_${year}.pdf`);
 
-  } catch(err) {
+  } catch (err) {
     console.error('PDF error:', err);
-    alert('Erreur lors de la génération du PDF. Essaie depuis Chrome.');
+    alert('Erreur lors de la génération du PDF.');
   } finally {
-    pdfOverlay.classList.remove('active');
+    byId('pdf-overlay').classList.remove('active');
   }
 });
-
-/* ═══════════════════════════════════════════════
+/* ══════════════════════════════════════════
    SAVE HTML
-═══════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 byId('btn-save').addEventListener('click', () => {
-  const snapshot   = JSON.stringify(musicians);
-  const bandName   = byId('band-name').value;
-  const subtitle   = byId('band-subtitle').value;
-  const retours    = byId('badge-retours').value;
-  const scene      = byId('badge-scene').value;
-  const setup      = byId('badge-setup').value;
-  const phone      = byId('footer-phone').value;
-  const year       = byId('footer-year').value;
+  const esc = s => s.replace(/"/g, '&quot;');
+  const snapshot  = JSON.stringify(musicians);
+  const hbSnap    = JSON.stringify(headerBadges);
+  const bandName  = byId('band-name').value;
+  const subtitle  = byId('band-subtitle').value;
+  const phone     = byId('footer-phone').value;
+  const year      = byId('footer-year').value;
+  const theme     = currentTheme();
 
   let html = document.documentElement.outerHTML;
-  const esc = s => s.replace(/"/g, '&quot;');
 
   html = html.replace(/let musicians = \[[\s\S]*?\];/, 'let musicians = ' + snapshot + ';');
+  html = html.replace(/let headerBadges = \[[\s\S]*?\];/, 'let headerBadges = ' + hbSnap + ';');
   html = html.replace(/id="band-name" value="[^"]*"/, `id="band-name" value="${esc(bandName)}"`);
   html = html.replace(/id="band-subtitle" value="[^"]*"/, `id="band-subtitle" value="${esc(subtitle)}"`);
-  html = html.replace(/id="badge-retours" value="[^"]*"/, `id="badge-retours" value="${esc(retours)}"`);
-  html = html.replace(/id="badge-scene" value="[^"]*"/, `id="badge-scene" value="${esc(scene)}"`);
-  html = html.replace(/id="badge-setup" value="[^"]*"/, `id="badge-setup" value="${esc(setup)}"`);
   html = html.replace(/id="footer-phone" value="[^"]*"/, `id="footer-phone" value="${esc(phone)}"`);
   html = html.replace(/id="footer-year" value="[^"]*"/, `id="footer-year" value="${esc(year)}"`);
+
+  // Inject saved theme as an inline script that runs on load
+  const themeScript = `<script>window.__savedTheme = ${JSON.stringify(theme)};<\/script>`;
+  html = html.replace('</head>', themeScript + '</head>');
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url  = URL.createObjectURL(blob);
@@ -798,7 +1441,11 @@ byId('btn-save').addEventListener('click', () => {
   a.click(); URL.revokeObjectURL(url);
 });
 
-/* ─ INIT ─ */
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+if (window.__savedTheme) applyTheme(window.__savedTheme);
+renderHeaderBadges();
 buildPalette();
 renderTable();
 </script>
