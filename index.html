@@ -1,11 +1,11 @@
 <!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
 <meta name="author" content="Elie JESURAN">
 <meta name="copyright" content="© 2026 Elie JESURAN">
 <meta name="date" content="2026-04-01 🐟">
 <meta name="licence" content="GPL">
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SSBBB — Fiche Technique 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
   --black: #0a0a0a; --card: #161616; --border: #2a2a2a;
   --gold: #c8a84b; --gold-dim: #6b5a28; --gold-light: #D9C382;
   --white: #f0ece0; --grey: #888880; --muted: #444440;
-  --accent: #c8a84b;
+  --grain-val: 0.4;
 }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -29,7 +29,7 @@ body {
 body::before {
   content: ''; position: fixed; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none; z-index: 999; opacity: 0.4;
+  pointer-events: none; z-index: 999; opacity: var(--grain-val, 0.4);
 }
 
 /* ── HEADER ── */
@@ -613,6 +613,8 @@ function renderHeaderBadges() {
     row.appendChild(div);
   });
 
+  if (typeof saveToStorage === 'function') saveToStorage();
+
   // + Add badge button
   const addBtn = document.createElement('button');
   addBtn.className = 'btn-add-badge';
@@ -681,7 +683,7 @@ function renderTable(animateLast = false) {
 
     tr.addEventListener('dragover', e => { e.preventDefault(); tr.classList.add('drag-over'); });
     tr.addEventListener('dragleave', () => tr.classList.remove('drag-over'));
-    tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); if (!dragType) return; m.badges.push(dragType); renderTable(); });
+    tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('drag-over'); if (!dragType || m.badges.includes(dragType)) return; m.badges.push(dragType); renderTable(); });
     tbody.appendChild(tr);
   });
   updateCount();
@@ -726,7 +728,7 @@ function renderModal() {
   ALL_TYPES.forEach(type => {
     const btn = document.createElement('button');
     btn.className = `modal-add-btn ${type}`; btn.textContent = '+ ' + LABELS[type];
-    btn.addEventListener('click', () => { m.badges.push(type); renderModal(); renderTable(); });
+    btn.addEventListener('click', () => { if (m.badges.includes(type)) return; m.badges.push(type); renderModal(); renderTable(); });
     grid.appendChild(btn);
   });
   byId('modal-comment').oninput = () => { m.comment = byId('modal-comment').value; renderTable(); };
@@ -848,8 +850,9 @@ function applyTheme(values) {
 
   // glow
   const glow = parseFloat(values['t-glow'] || 0.5);
+  const glowColor = (values['t-gold'] || getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() || '#c8a84b');
   document.querySelectorAll('.band-name-input').forEach(el =>
-    el.style.textShadow = `0 0 80px rgba(200,168,75,${glow * 0.4})`
+    el.style.textShadow = `0 0 80px ${glowColor}${Math.round(glow * 0.4 * 255).toString(16).padStart(2,'0')}`
   );
 
   // sync pickers
@@ -895,8 +898,9 @@ byId('t-grain').addEventListener('input', () => {
 });
 byId('t-glow').addEventListener('input', () => {
   const g = parseFloat(byId('t-glow').value);
+  const c = getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() || '#c8a84b';
   document.querySelectorAll('.band-name-input').forEach(el =>
-    el.style.textShadow = `0 0 80px rgba(200,168,75,${g * 0.4})`
+    el.style.textShadow = `0 0 80px ${c}${Math.round(g * 0.4 * 255).toString(16).padStart(2,'0')}`
   );
 });
 
@@ -1399,7 +1403,8 @@ byId('btn-pdf').addEventListener('click', async () => {
     target.style.left = '';
     target.style.top = '';
 
-    doc.save(`SSBBB_fiche_technique_${year}.pdf`);
+    const safeFilename = bandName.replace(/[^a-zA-Z0-9_\- ]/g, '').trim().replace(/\s+/g, '_') || 'GROUPE';
+    doc.save(`${safeFilename}_fiche_technique_${year}.pdf`);
 
   } catch (err) {
     console.error('PDF error:', err);
@@ -1430,21 +1435,69 @@ byId('btn-save').addEventListener('click', () => {
   html = html.replace(/id="footer-phone" value="[^"]*"/, `id="footer-phone" value="${esc(phone)}"`);
   html = html.replace(/id="footer-year" value="[^"]*"/, `id="footer-year" value="${esc(year)}"`);
 
-  // Inject saved theme as an inline script that runs on load
+  // Inject saved theme as an inline script that runs on load (replace existing one if present)
   const themeScript = `<script>window.__savedTheme = ${JSON.stringify(theme)};<\/script>`;
-  html = html.replace('</head>', themeScript + '</head>');
+  if (html.includes('window.__savedTheme')) {
+    html = html.replace(/<script>window\.__savedTheme[\s\S]*?<\/script>/, themeScript);
+  } else {
+    html = html.replace('</head>', themeScript + '</head>');
+  }
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href = url; a.download = `SSBBB_fiche_technique_${year}.html`;
+  const safeFilename = bandName.replace(/[^a-zA-Z0-9_\- ]/g, '').trim().replace(/\s+/g, '_') || 'GROUPE';
+  a.href = url; a.download = `${safeFilename}_fiche_technique_${year}.html`;
   a.click(); URL.revokeObjectURL(url);
 });
+
+/* ══════════════════════════════════════════
+   LOCALSTORAGE AUTOSAVE
+══════════════════════════════════════════ */
+const LS_KEY = 'ssbbb_fiche';
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      musicians,
+      headerBadges,
+      bandName:  byId('band-name').value,
+      subtitle:  byId('band-subtitle').value,
+      phone:     byId('footer-phone').value,
+      year:      byId('footer-year').value,
+    }));
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (d.musicians)    { musicians = d.musicians; nextId = Math.max(...musicians.map(m => m.id), 0) + 1; }
+    if (d.headerBadges) { headerBadges = d.headerBadges; nextBadgeId = Math.max(...headerBadges.filter(b=>!b.fixed).map(b => parseInt(b.id.replace('h',''))||0), 0) + 1; }
+    if (d.bandName  != null) { byId('band-name').value      = d.bandName;  byId('band-title').textContent = d.bandName.toUpperCase() + ' • FICHE TECHNIQUE'; }
+    if (d.subtitle  != null)   byId('band-subtitle').value  = d.subtitle;
+    if (d.phone     != null)   byId('footer-phone').value   = d.phone;
+    if (d.year      != null)   byId('footer-year').value    = d.year;
+    return true;
+  } catch(e) { return false; }
+}
+
+// Autosave on every data mutation
+const _origRenderTable = renderTable;
+function renderTable(animateLast = false) { _origRenderTable(animateLast); saveToStorage(); }
+
+byId('band-name').addEventListener('input', saveToStorage);
+byId('band-subtitle').addEventListener('input', saveToStorage);
+byId('footer-phone').addEventListener('input', saveToStorage);
+byId('footer-year').addEventListener('input', saveToStorage);
 
 /* ══════════════════════════════════════════
    INIT
 ══════════════════════════════════════════ */
 if (window.__savedTheme) applyTheme(window.__savedTheme);
+loadFromStorage();
 renderHeaderBadges();
 buildPalette();
 renderTable();
