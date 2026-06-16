@@ -113,6 +113,8 @@ header::after {
 .toolbar-btn.pdf-btn:hover { background: rgba(192,57,43,0.14); border-color: #e74c3c; }
 .toolbar-btn.theme-btn { border-color: rgba(93,173,226,0.4); color: #5dade2; background: rgba(93,173,226,0.05); }
 .toolbar-btn.theme-btn:hover { background: rgba(93,173,226,0.12); border-color: #5dade2; }
+.toolbar-btn.share-btn { border-color: rgba(88,214,141,0.45); color: #58d68d; background: rgba(88,214,141,0.06); }
+.toolbar-btn.share-btn:hover { background: rgba(88,214,141,0.14); border-color: #58d68d; }
 
 /* ── MAIN ── */
 main { padding: 32px 40px; max-width: 1100px; margin: 0 auto; }
@@ -389,11 +391,23 @@ header          { animation: fadeUp 0.5s ease both; }
 
 <!-- ═══ TOOLBAR ═══ -->
 <div class="toolbar">
-  <button class="toolbar-btn pdf-btn" id="btn-pdf">
+  <button class="toolbar-btn" id="btn-new" title="Repartir d'une fiche vierge">
+    <span>📄</span><span class="label">Nouvelle</span>
+  </button>
+  <button class="toolbar-btn pdf-btn" id="btn-pdf" title="Télécharger en PDF (à envoyer à l'ingé son)">
     <span>⬇</span><span class="label">Export PDF</span>
   </button>
-  <button class="toolbar-btn" id="btn-save">
-    <span>💾</span><span class="label">Sauvegarder HTML</span>
+  <button class="toolbar-btn share-btn" id="btn-share" title="Copier un lien partageable vers cette fiche">
+    <span>🔗</span><span class="label">Partager</span>
+  </button>
+  <button class="toolbar-btn" id="btn-import" title="Ouvrir une fiche sauvegardée (.html ou .json) pour la modifier">
+    <span>📂</span><span class="label">Ouvrir</span>
+  </button>
+  <button class="toolbar-btn" id="btn-save" title="Sauvegarder un fichier de secours réouvrable">
+    <span>💾</span><span class="label">Sauvegarder</span>
+  </button>
+  <button class="toolbar-btn" id="btn-json" title="Exporter les données seules (.json)">
+    <span>{ }</span><span class="label">JSON</span>
   </button>
   <button class="toolbar-btn theme-btn" id="btn-theme">
     <span>🎨</span><span class="label">Thème</span>
@@ -401,6 +415,7 @@ header          { animation: fadeUp 0.5s ease both; }
   <button class="toolbar-btn" id="btn-add-toolbar" style="display:none">
     <span style="font-size:15px">+</span><span class="label">Musicien</span>
   </button>
+  <input type="file" id="file-input" accept=".json,.html,application/json,text/html" style="display:none">
 </div>
 
 <!-- ═══ MAIN ═══ -->
@@ -687,6 +702,7 @@ function renderTable(animateLast = false) {
     tbody.appendChild(tr);
   });
   updateCount();
+  if (typeof saveToStorage === 'function') saveToStorage();
 }
 
 /* ── Palette ── */
@@ -1443,6 +1459,15 @@ byId('btn-save').addEventListener('click', () => {
     html = html.replace('</head>', themeScript + '</head>');
   }
 
+  // Embed a clean, import-friendly data blob (base64, Unicode-safe) so the file
+  // can be re-opened/transformed via the "Ouvrir" button reliably
+  const dataScript = `<script>window.__ficheData="${encodeState(captureState())}";<\/script>`;
+  if (html.includes('window.__ficheData')) {
+    html = html.replace(/<script>window\.__ficheData="[^"]*";<\/script>/, dataScript);
+  } else {
+    html = html.replace('</head>', dataScript + '</head>');
+  }
+
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
@@ -1457,36 +1482,16 @@ byId('btn-save').addEventListener('click', () => {
 const LS_KEY = 'ssbbb_fiche';
 
 function saveToStorage() {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify({
-      musicians,
-      headerBadges,
-      bandName:  byId('band-name').value,
-      subtitle:  byId('band-subtitle').value,
-      phone:     byId('footer-phone').value,
-      year:      byId('footer-year').value,
-    }));
-  } catch(e) {}
+  try { localStorage.setItem(LS_KEY, JSON.stringify(captureState())); } catch(e) {}
 }
 
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return false;
-    const d = JSON.parse(raw);
-    if (d.musicians)    { musicians = d.musicians; nextId = Math.max(...musicians.map(m => m.id), 0) + 1; }
-    if (d.headerBadges) { headerBadges = d.headerBadges; nextBadgeId = Math.max(...headerBadges.filter(b=>!b.fixed).map(b => parseInt(b.id.replace('h',''))||0), 0) + 1; }
-    if (d.bandName  != null) { byId('band-name').value      = d.bandName;  byId('band-title').textContent = d.bandName.toUpperCase() + ' • FICHE TECHNIQUE'; }
-    if (d.subtitle  != null)   byId('band-subtitle').value  = d.subtitle;
-    if (d.phone     != null)   byId('footer-phone').value   = d.phone;
-    if (d.year      != null)   byId('footer-year').value    = d.year;
-    return true;
+    return loadData(JSON.parse(raw));
   } catch(e) { return false; }
 }
-
-// Autosave on every data mutation
-const _origRenderTable = renderTable;
-function renderTable(animateLast = false) { _origRenderTable(animateLast); saveToStorage(); }
 
 byId('band-name').addEventListener('input', saveToStorage);
 byId('band-subtitle').addEventListener('input', saveToStorage);
@@ -1494,13 +1499,206 @@ byId('footer-phone').addEventListener('input', saveToStorage);
 byId('footer-year').addEventListener('input', saveToStorage);
 
 /* ══════════════════════════════════════════
+   PORTABILITÉ — capture, nouvelle fiche, partage, import/export
+   (aucun serveur requis : tout vit dans le fichier / le lien / le navigateur)
+══════════════════════════════════════════ */
+
+// État complet sérialisable de la fiche
+function captureState() {
+  return {
+    v: 1,
+    musicians,
+    headerBadges,
+    bandName: byId('band-name').value,
+    subtitle: byId('band-subtitle').value,
+    phone:    byId('footer-phone').value,
+    year:     byId('footer-year').value,
+    theme:    currentTheme(),
+  };
+}
+
+// Applique des données SANS rendre (utilisé au chargement) — renvoie true si OK
+function loadData(d) {
+  if (!d || typeof d !== 'object') return false;
+  if (Array.isArray(d.musicians)) {
+    musicians = d.musicians;
+    nextId = Math.max(0, ...musicians.map(m => +m.id || 0)) + 1;
+  }
+  if (Array.isArray(d.headerBadges)) {
+    headerBadges = d.headerBadges;
+    if (!headerBadges.some(b => b && b.fixed))
+      headerBadges.unshift({ id: 'count', label: null, fixed: true });
+    nextBadgeId = Math.max(0, ...headerBadges
+      .filter(b => b && !b.fixed)
+      .map(b => parseInt(String(b.id).replace(/\D/g, '')) || 0)) + 1;
+  }
+  if (d.bandName != null) {
+    byId('band-name').value = d.bandName;
+    byId('band-title').textContent = String(d.bandName).toUpperCase() + ' • FICHE TECHNIQUE';
+  }
+  if (d.subtitle != null) byId('band-subtitle').value = d.subtitle;
+  if (d.phone    != null) byId('footer-phone').value  = d.phone;
+  if (d.year     != null) byId('footer-year').value   = d.year;
+  if (d.theme) applyTheme(d.theme);
+  return true;
+}
+
+// Applique + rend + sauvegarde (utilisé par import / nouvelle fiche / lien)
+function applyState(d) {
+  if (!loadData(d)) return false;
+  renderHeaderBadges();
+  renderTable();
+  saveToStorage();
+  return true;
+}
+
+// Encodage/décodage Unicode-safe (gère les emojis) pour lien URL et fichiers
+function encodeState(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+function decodeState(b64) { return JSON.parse(decodeURIComponent(escape(atob(b64)))); }
+
+/* ── Petit toast de feedback ── */
+function showToast(msg) {
+  let t = byId('toast');
+  if (!t) {
+    t = document.createElement('div'); t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);' +
+      'background:#1c1c1c;border:1px solid var(--gold-dim);color:var(--gold);' +
+      "padding:12px 22px;border-radius:6px;font-family:'Space Mono',monospace;font-size:12px;" +
+      'letter-spacing:0.08em;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.6);opacity:0;' +
+      'transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  requestAnimationFrame(() => { t.style.opacity = '1'; });
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2400);
+}
+
+/* ── Nouvelle fiche vierge ── */
+function newFiche() {
+  if (!confirm("Effacer la fiche actuelle et repartir d'une fiche vierge ?")) return;
+  applyState({
+    v: 1,
+    musicians: [{ id: 1, name: '', badges: [], comment: '' }],
+    headerBadges: [{ id: 'count', label: null, fixed: true }],
+    bandName: '', subtitle: 'Fiche Technique',
+    phone: '', year: String(new Date().getFullYear()),
+  });
+  byId('band-name').focus();
+  showToast('Nouvelle fiche créée — à toi de jouer !');
+}
+
+/* ── Partager via un lien (aucun serveur) ── */
+async function shareLink() {
+  const url = location.origin + location.pathname + '#d=' + encodeState(captureState());
+  if (navigator.share && isMobile()) {
+    try { await navigator.share({ title: byId('band-name').value || 'Fiche technique', url }); }
+    catch(e) { /* partage annulé par l'utilisateur */ }
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('🔗 Lien copié — colle-le pour partager ta fiche');
+  } catch(e) {
+    prompt('Copie ce lien pour partager ta fiche :', url);
+  }
+}
+
+/* ── Export JSON (données seules) ── */
+function exportJson() {
+  const blob = new Blob([JSON.stringify(captureState(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safe = (byId('band-name').value || 'fiche').replace(/[^a-zA-Z0-9_\- ]/g, '').trim().replace(/\s+/g, '_') || 'fiche';
+  a.href = url; a.download = safe + '_fiche.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+/* ── Ouvrir / importer un fichier (.json ou .html sauvegardé) ── */
+async function importFile(file) {
+  try {
+    const text = await file.text();
+    let data = null;
+
+    if (/\.json$/i.test(file.name) || text.trim().charAt(0) === '{') {
+      data = JSON.parse(text);
+    } else {
+      // 1) Blob embarqué (fichiers HTML sauvegardés par cette app)
+      const m = text.match(/window\.__ficheData="([^"]*)"/);
+      if (m) {
+        data = decodeState(m[1]);
+      } else {
+        // 2) Ancien format : extraction directe depuis le HTML
+        data = {};
+        const mus = text.match(/let musicians = (\[[\s\S]*?\]);/);
+        const hb  = text.match(/let headerBadges = (\[[\s\S]*?\]);/);
+        const th  = text.match(/window\.__savedTheme = ({[\s\S]*?});<\/script>/);
+        if (mus) try { data.musicians    = JSON.parse(mus[1]); } catch(e) {}
+        if (hb)  try { data.headerBadges = JSON.parse(hb[1]);  } catch(e) {}
+        if (th)  try { data.theme        = JSON.parse(th[1]);  } catch(e) {}
+        const dom = new DOMParser().parseFromString(text, 'text/html');
+        const gv = id => dom.getElementById(id)?.getAttribute('value');
+        if (gv('band-name')     != null) data.bandName = gv('band-name');
+        if (gv('band-subtitle') != null) data.subtitle = gv('band-subtitle');
+        if (gv('footer-phone')  != null) data.phone    = gv('footer-phone');
+        if (gv('footer-year')   != null) data.year     = gv('footer-year');
+      }
+    }
+
+    if (data && (Array.isArray(data.musicians) || data.bandName != null)) {
+      applyState(data);
+      showToast('Fiche importée ✓ — tu peux la modifier');
+    } else {
+      alert('Fichier non reconnu.\nImporte un .json, ou un .html sauvegardé par cette application.');
+    }
+  } catch(e) {
+    console.error('Import error:', e);
+    alert('Impossible de lire ce fichier.');
+  }
+}
+
+/* ── Câblage des boutons ── */
+byId('btn-new').addEventListener('click', newFiche);
+byId('btn-share').addEventListener('click', shareLink);
+byId('btn-json').addEventListener('click', exportJson);
+byId('btn-import').addEventListener('click', () => byId('file-input').click());
+byId('file-input').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (f) importFile(f);
+  e.target.value = '';
+});
+
+/* ══════════════════════════════════════════
    INIT
 ══════════════════════════════════════════ */
-if (window.__savedTheme) applyTheme(window.__savedTheme);
-loadFromStorage();
-renderHeaderBadges();
-buildPalette();
-renderTable();
+function boot() {
+  let loaded = false;
+
+  // 1) Fiche reçue via un lien partagé (#d=...) — prioritaire
+  if (location.hash.startsWith('#d=')) {
+    try { loaded = loadData(decodeState(location.hash.slice(3))); }
+    catch(e) { console.error('Lien de fiche invalide :', e); }
+  }
+
+  // 2) Sinon, dernière fiche sauvegardée dans ce navigateur
+  if (!loaded) {
+    if (window.__savedTheme) applyTheme(window.__savedTheme);
+    loaded = loadFromStorage();
+  }
+
+  // 3) Sinon : données d'exemple par défaut (déjà en mémoire)
+  renderHeaderBadges();
+  buildPalette();
+  renderTable();
+
+  // Après import d'un lien : on nettoie l'URL et on persiste localement,
+  // pour que les modifications suivantes ne soient pas écrasées au rechargement
+  if (location.hash.startsWith('#d=')) {
+    history.replaceState(null, '', location.pathname + location.search);
+    saveToStorage();
+  }
+}
+boot();
 </script>
 </body>
 </html>

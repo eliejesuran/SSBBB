@@ -4,7 +4,9 @@ Application web single-file pour créer et exporter des fiches techniques sonore
 
 ## Architecture
 
-Un seul fichier : `index.html` (~1450 lignes). HTML + CSS + JS inline — aucun build, aucune dépendance locale.
+Un seul fichier : `index.html` (~1700 lignes). HTML + CSS + JS inline — aucun build, aucune dépendance locale.
+
+> **Pourquoi pas de serveur ?** Une fiche technique est créée par une personne puis remise (en PDF) à l'ingé son. La collaboration temps réel (comme le projet *setlist*) serait surdimensionnée. Le partage se fait donc **sans serveur** : lien autoportant (état encodé dans l'URL), fichier `.html`/`.json` réouvrable, et autosave `localStorage`. Hébergement statique (GitHub Pages) suffit. Le pattern serveur WebSocket reste disponible dans `../setlist/server/` si la collaboration live devient nécessaire un jour.
 
 **Dépendances CDN :**
 - [jsPDF 2.5.1](https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js) — génération PDF
@@ -15,17 +17,18 @@ Un seul fichier : `index.html` (~1450 lignes). HTML + CSS + JS inline — aucun 
 
 | Zone | Lignes | Rôle |
 |---|---|---|
-| CSS | 14–377 | Styles complets, responsive, animations, dark mode, media queries |
-| HTML | 379–516 | Structure : header, toolbar, tableau, palette, modals |
-| DATA | 522–563 | `musicians[]`, `headerBadges[]`, `LABELS`, `BADGE_COLORS` |
-| HEADER BADGES | 570–628 | Badges dynamiques en-tête (nombre musiciens, infos scène) |
-| TABLE | 630–688 | Rendu du tableau musiciens avec drag & drop |
-| PALETTE | 691–700 | Palette de badges glissables (desktop uniquement) |
-| MODAL | 703–740 | Bottom sheet mobile pour ajouter/retirer badges |
-| THEME ENGINE | 762–922 | Presets couleur, sliders grain/glow, pickers CSS |
-| PDF EXPORT | 928–1410 | Pagination auto, rendu html2canvas, export jsPDF |
-| SAVE HTML | 1414–1441 | Snapshot de l'état courant dans un `.html` téléchargeable |
-| INIT | 1447–1450 | Bootstrap : thème sauvegardé, rendu initial |
+| CSS | 14–~390 | Styles complets, responsive, animations, dark mode, media queries |
+| HTML | ~390–530 | Structure : header, toolbar (8 boutons), tableau, palette, modals, `#file-input` |
+| DATA | ~535 | `musicians[]`, `headerBadges[]`, `LABELS`, `BADGE_COLORS` |
+| HEADER BADGES | ~585 | Badges dynamiques en-tête (nombre musiciens, infos scène) |
+| TABLE | ~648 | Rendu du tableau musiciens ; `renderTable()` appelle `saveToStorage()` en fin |
+| PALETTE / MODAL | ~700 | Palette glissable (desktop) + bottom sheet mobile |
+| THEME ENGINE | ~778 | Presets couleur, sliders grain/glow, pickers CSS |
+| PDF EXPORT | ~945 | Pagination auto, rendu html2canvas, export jsPDF |
+| SAVE HTML | ~1433 | Snapshot `.html` (état `let musicians`/inputs + blob `__ficheData` base64 + `__savedTheme`) |
+| LOCALSTORAGE | ~1480 | `saveToStorage`/`loadFromStorage` reposent sur `captureState`/`loadData` |
+| PORTABILITÉ | ~1502 | `captureState`, `loadData`, `applyState`, `encodeState`/`decodeState`, `newFiche`, `shareLink`, `importFile`, `exportJson`, `showToast` |
+| INIT | ~1672 | `boot()` : priorité lien `#d=` → localStorage → données d'exemple |
 
 ## Fonctionnalités
 
@@ -34,7 +37,11 @@ Un seul fichier : `index.html` (~1450 lignes). HTML + CSS + JS inline — aucun 
 - **Badges d'en-tête** : informations scène (nombre de musiciens, dimensions, etc.), éditables et supprimables
 - **Thème** : 5 presets (Dark Gold, Ice Blue, Rouge, Vert, Blanc), couleurs entièrement personnalisables, choix de police, effet grain et glow
 - **Export PDF** : pagination automatique A4, respect du thème actif, nom de fichier avec l'année
-- **Sauvegarde HTML** : snapshot complet avec données et thème embarqués, réouvrable dans le navigateur
+- **Nouvelle fiche** (📄) : repart d'une fiche vierge (1 ligne, champs vides) — pour qu'un nouvel utilisateur crée la sienne sans effacer 12 lignes à la main
+- **Partager** (🔗) : copie un lien autoportant (`#d=` + état base64 Unicode-safe) ; utilise `navigator.share` sur mobile. Aucun serveur — le lien contient toute la fiche
+- **Ouvrir / importer** (📂) : recharge une fiche depuis un `.json` ou un `.html` sauvegardé (blob `__ficheData`, sinon parsing legacy `let musicians` + valeurs d'inputs via `DOMParser`) → pour modifier/transformer une fiche existante
+- **Sauvegarde HTML** (💾) : snapshot complet avec données et thème embarqués, réouvrable dans le navigateur
+- **Export JSON** (`{ }`) : données seules (`captureState()`), légères à versionner/partager
 
 ## Lancer l'application
 
@@ -59,12 +66,15 @@ Aucun serveur requis. Fonctionne hors-ligne une fois ouvert (les polices Google 
 - [x] **Badges dupliqués non bloqués** — vérification `includes()` dans le drop handler et le modal
 - [x] **Variable CSS `--accent` inutilisée** — supprimée, remplacée par `--grain-val: 0.4`
 - [x] **Aucune persistance localStorage** — autosave à chaque mutation (musiciens, badges, champs texte)
+- [x] **`renderTable` en récursion infinie** (`Maximum call stack size exceeded`) — le wrapper d'autosave redéclarait `function renderTable` ; par hoisting, `const _origRenderTable = renderTable` capturait le wrapper lui-même → la table ne s'affichait plus du tout. Corrigé : `saveToStorage()` appelé directement en fin du vrai `renderTable`, wrapper supprimé.
+- [x] **Réutilisable par tout le monde** — bouton « Nouvelle fiche », partage par lien autoportant, import `.json`/`.html`, export JSON (voir Fonctionnalités)
 
 ### Améliorations à prévoir
 
 - [ ] Ajouter un type de badge personnalisé (champ libre + couleur)
 - [ ] Réordonner les lignes du tableau par glisser-déposer (le CSS `drag-over` est prêt mais le réordonnement n'est pas implémenté)
-- [ ] Export JSON des données seules (sans le HTML entier) pour versionner ou partager la liste
+- [x] ~~Export JSON des données seules~~ — fait (bouton `{ }`)
+- [x] ~~État dans l'URL (Option 3)~~ — fait (bouton 🔗 Partager, état encodé dans `#d=`)
 - [ ] Bouton "Dupliquer" une fiche pour créer des variantes (acoustique, électrique, etc.)
 
 ---
@@ -87,8 +97,8 @@ Cliquer "Sauvegarder HTML" génère un `.html` autonome avec toutes les données
 - Partagé via Google Drive / Dropbox (prévisualisation dans le navigateur)
 - Ouvert sur n'importe quel appareil sans installation
 
-### Option 3 — État dans l'URL (à implémenter)
-Encoder les données musiciens en JSON compressé dans le hash `#` de l'URL permettrait de partager un lien direct vers une fiche préconfigurée. Utile pour des fiches éphémères (guest, date unique) sans avoir à pousser un commit.
+### Option 3 — État dans l'URL ✅ (implémenté)
+Le bouton **🔗 Partager** encode tout l'état (`captureState()` → JSON → base64 Unicode-safe) dans le hash `#d=` de l'URL et le copie dans le presse-papier (ou `navigator.share` sur mobile). N'importe qui ouvrant ce lien voit la fiche préconfigurée, peut l'éditer et la ré-exporter — sans serveur ni commit. À l'ouverture, `boot()` charge le hash en priorité, nettoie l'URL (`history.replaceState`) puis persiste en localStorage. Idéal pour des fiches éphémères (guest, date unique). Taille typique du lien : ~2 Ko.
 
 ### Option 4 — Hébergement instantané
 Glisser `index.html` (ou le HTML sauvegardé) sur [netlify.com/drop](https://netlify.com/drop) génère une URL publique en quelques secondes, sans compte requis.
