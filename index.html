@@ -95,8 +95,8 @@ header::after {
 /* ── TOOLBAR ── */
 .toolbar {
   display: flex; gap: 8px; flex-wrap: wrap;
-  padding: 12px 40px; border-bottom: 1px solid var(--border);
-  background: rgba(10,10,10,0.97);
+  padding: 12px 64px 12px 40px; border-bottom: 1px solid var(--border);
+  background: var(--black);
   position: sticky; top: 0; z-index: 50;
 }
 .toolbar-btn {
@@ -111,8 +111,6 @@ header::after {
 .toolbar-btn:active { transform: scale(0.97); }
 .toolbar-btn.pdf-btn { border-color: rgba(192,57,43,0.5); color: #e74c3c; background: rgba(192,57,43,0.06); }
 .toolbar-btn.pdf-btn:hover { background: rgba(192,57,43,0.14); border-color: #e74c3c; }
-.toolbar-btn.theme-btn { border-color: rgba(93,173,226,0.4); color: #5dade2; background: rgba(93,173,226,0.05); }
-.toolbar-btn.theme-btn:hover { background: rgba(93,173,226,0.12); border-color: #5dade2; }
 .toolbar-btn.share-btn { border-color: rgba(88,214,141,0.45); color: #58d68d; background: rgba(88,214,141,0.06); }
 .toolbar-btn.share-btn:hover { background: rgba(88,214,141,0.14); border-color: #58d68d; }
 
@@ -217,80 +215,39 @@ footer {
 }
 
 /* ══════════════════════════════════════════════
-   THEME PANEL
+   THEME — bascule clair (sépia) / sombre
 ══════════════════════════════════════════════ */
-.theme-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7); z-index: 400;
-  align-items: flex-start; justify-content: flex-end;
+/* Mode sépia (clair) : surcharge des variables de couleur */
+html[data-theme="sepia"] {
+  --black: #efe5cf; --card: #e7dabb; --border: #d2c198;
+  --gold: #8a5a1c; --gold-dim: #c0a36a; --gold-light: #6e4f22;
+  --white: #3a2c18; --grey: #7c6a49; --muted: #b0996e;
+  --grain-val: 0.08;
 }
-.theme-overlay.open { display: flex; }
+html[data-theme="sepia"] .band-name-input { text-shadow: none; }
 
-.theme-panel {
-  background: #141414; border-left: 1px solid var(--border);
-  width: 320px; height: 100vh; overflow-y: auto;
-  padding: 28px 24px 48px; animation: slideInRight 0.25s ease;
-  font-family: 'Inter', sans-serif;
-}
-@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+/* Lisibilité des badges micro/DI sur fond clair */
+html[data-theme="sepia"] .kick      { background: rgba(192,57,43,0.14); color: #b03328; border-color: rgba(192,57,43,0.45); }
+html[data-theme="sepia"] .oh        { background: rgba(41,128,185,0.14); color: #21618c; border-color: rgba(41,128,185,0.4); }
+html[data-theme="sepia"] .di        { background: rgba(39,140,80,0.14);  color: #1e7a45; border-color: rgba(39,140,80,0.4); }
+html[data-theme="sepia"] .ampli     { background: rgba(160,120,30,0.16); color: #7a5512; border-color: rgba(160,120,30,0.45); }
+html[data-theme="sepia"] .sm58      { background: rgba(120,60,160,0.14); color: #6c3483; border-color: rgba(120,60,160,0.4); }
+html[data-theme="sepia"] .jack      { background: rgba(200,110,20,0.16); color: #9c5806; border-color: rgba(200,110,20,0.45); }
+html[data-theme="sepia"] .xlr       { background: rgba(90,80,60,0.14);   color: #5a4d36; border-color: rgba(90,80,60,0.4); }
+html[data-theme="sepia"] .nophantom { background: rgba(180,120,10,0.16); color: #8a6206; border-color: rgba(180,120,10,0.45); }
 
-.theme-panel-title {
-  font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 0.15em;
-  color: var(--gold); margin-bottom: 6px;
+/* Bouton bascule, en haut à droite */
+#btn-theme-toggle {
+  position: fixed; top: 12px; right: 14px; z-index: 300;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--gold-dim); background: var(--card);
+  color: var(--gold); font-size: 18px; cursor: pointer; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3); transition: transform 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.theme-panel-sub {
-  font-size: 10px; color: var(--muted); letter-spacing: 0.15em; margin-bottom: 28px;
-}
-.theme-close {
-  position: absolute; top: 18px; right: 20px;
-  background: none; border: none; color: var(--muted); font-size: 22px;
-  cursor: pointer; transition: color 0.15s; line-height: 1;
-}
-.theme-close:hover { color: var(--white); }
-
-.theme-section-label {
-  font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase;
-  color: var(--gold-dim); margin-bottom: 14px; margin-top: 24px;
-  padding-bottom: 6px; border-bottom: 1px solid var(--border);
-}
-
-.theme-row {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 14px; gap: 12px;
-}
-.theme-row label {
-  font-size: 11px; color: var(--grey); letter-spacing: 0.08em; flex: 1; white-space: nowrap;
-}
-.theme-row input[type="color"] {
-  width: 44px; height: 28px; border: 1px solid var(--border);
-  border-radius: 3px; cursor: pointer; background: none; padding: 2px;
-}
-.theme-row input[type="range"] {
-  flex: 1; accent-color: var(--gold); cursor: pointer;
-}
-.theme-row select {
-  background: #1e1e1e; border: 1px solid var(--border); color: var(--white);
-  font-family: 'Inter', sans-serif; font-size: 11px; padding: 5px 8px;
-  border-radius: 3px; outline: none; cursor: pointer; flex: 1;
-}
-
-/* PRESETS row */
-.preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-.preset-btn {
-  padding: 6px 12px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-  border-radius: 3px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s;
-  font-family: 'Inter', sans-serif; white-space: nowrap;
-}
-.preset-btn:hover { transform: translateY(-1px); }
-
-.theme-reset {
-  width: 100%; margin-top: 24px; padding: 10px;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-  color: var(--muted); font-family: 'Inter', sans-serif; font-size: 11px;
-  letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;
-  border-radius: 3px; transition: all 0.15s;
-}
-.theme-reset:hover { color: var(--white); border-color: var(--grey); }
+#btn-theme-toggle:hover { border-color: var(--gold); transform: scale(1.08); }
+#btn-theme-toggle:active { transform: scale(0.94); }
 
 /* ══════════════════════
    MOBILE BOTTOM SHEET
@@ -365,7 +322,7 @@ header          { animation: fadeUp 0.5s ease both; }
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
   header, main, footer { padding-left: 16px; padding-right: 16px; }
-  .toolbar { padding: 10px 16px; gap: 6px; }
+  .toolbar { padding: 10px 56px 10px 16px; gap: 6px; }
   .toolbar-btn .label { display: none; }
   .toolbar-btn { padding: 9px 12px; }
   .palette-section { display: none; }
@@ -374,11 +331,13 @@ header          { animation: fadeUp 0.5s ease both; }
   tbody td { padding: 10px 10px; }
   .drop-cell { min-width: 110px; }
   .col-comment { display: none; }
-  .theme-panel { width: 100vw; }
 }
 </style>
 </head>
 <body>
+
+<!-- ═══ BASCULE THÈME (haut droite) ═══ -->
+<button id="btn-theme-toggle" title="Basculer clair / sombre" aria-label="Basculer le thème">🌙</button>
 
 <!-- ═══ HEADER ═══ -->
 <header>
@@ -408,9 +367,6 @@ header          { animation: fadeUp 0.5s ease both; }
   </button>
   <button class="toolbar-btn" id="btn-json" title="Exporter les données seules (.json)">
     <span>{ }</span><span class="label">JSON</span>
-  </button>
-  <button class="toolbar-btn theme-btn" id="btn-theme">
-    <span>🎨</span><span class="label">Thème</span>
   </button>
   <button class="toolbar-btn" id="btn-add-toolbar" style="display:none">
     <span style="font-size:15px">+</span><span class="label">Musicien</span>
@@ -449,60 +405,6 @@ header          { animation: fadeUp 0.5s ease both; }
   <div><input class="editable-field" id="footer-phone" value="+32 478 456 787" style="color:var(--gold);font-size:10px;letter-spacing:0.18em;width:160px" placeholder="Téléphone"></div>
   <div><input class="editable-field" id="footer-year" value="2026" style="color:var(--gold-light);font-size:10px;letter-spacing:0.18em;width:50px" placeholder="Année"></div>
 </footer>
-
-<!-- ═══ THEME PANEL ═══ -->
-<div class="theme-overlay" id="theme-overlay">
-  <div class="theme-panel" style="position:relative">
-    <button class="theme-close" id="theme-close">×</button>
-    <div class="theme-panel-title">🎨 Thème</div>
-    <div class="theme-panel-sub">Non imprimé dans le PDF</div>
-
-    <div class="theme-section-label">Presets</div>
-    <div class="preset-row" id="preset-row"></div>
-
-    <div class="theme-section-label">Couleurs</div>
-    <div class="theme-row"><label>Fond principal</label><input type="color" id="t-black" value="#0a0a0a"></div>
-    <div class="theme-row"><label>Texte principal</label><input type="color" id="t-white" value="#f0ece0"></div>
-    <div class="theme-row"><label>Couleur accent</label><input type="color" id="t-gold" value="#c8a84b"></div>
-    <div class="theme-row"><label>Accent sombre</label><input type="color" id="t-gold-dim" value="#6b5a28"></div>
-    <div class="theme-row"><label>Accent clair</label><input type="color" id="t-gold-light" value="#D9C382"></div>
-    <div class="theme-row"><label>Bordures</label><input type="color" id="t-border" value="#2a2a2a"></div>
-    <div class="theme-row"><label>Texte secondaire</label><input type="color" id="t-grey" value="#888880"></div>
-    <div class="theme-row"><label>Texte discret</label><input type="color" id="t-muted" value="#444440"></div>
-
-    <div class="theme-section-label">Typographie</div>
-    <div class="theme-row">
-      <label>Police principale</label>
-      <select id="t-font-body">
-        <option value="'Space Mono', monospace">Space Mono</option>
-        <option value="'Courier New', monospace">Courier New</option>
-        <option value="'Inter', sans-serif">Inter</option>
-        <option value="Georgia, serif">Georgia</option>
-      </select>
-    </div>
-    <div class="theme-row">
-      <label>Police titres</label>
-      <select id="t-font-title">
-        <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
-        <option value="Georgia, serif">Georgia</option>
-        <option value="Impact, sans-serif">Impact</option>
-        <option value="'Inter', sans-serif">Inter Bold</option>
-      </select>
-    </div>
-
-    <div class="theme-section-label">Effets</div>
-    <div class="theme-row">
-      <label>Grain (texture)</label>
-      <input type="range" id="t-grain" min="0" max="1" step="0.05" value="0.4">
-    </div>
-    <div class="theme-row">
-      <label>Glow titre</label>
-      <input type="range" id="t-glow" min="0" max="1" step="0.05" value="0.5">
-    </div>
-
-    <button class="theme-reset" id="theme-reset">↺ Réinitialiser</button>
-  </div>
-</div>
 
 <!-- ═══ MOBILE BADGE MODAL ═══ -->
 <div class="modal-overlay" id="modal-overlay">
@@ -571,15 +473,50 @@ let musicians = [
   { id:8,  name:'Louis 5000 — Lead Vocal 🎤',   badges:['sm58'],                    comment:'' },
   { id:9,  name:'Dr Nico — Chœur 🎤',           badges:['sm58'],                    comment:'' },
   { id:10, name:'Rahul 🎶',                      badges:[],                          comment:'' },
-  { id:11, name:'Day — Accordéon 🪗 (guest)',    badges:['sm58'],                    comment:'' },
-  { id:12, name:'Q 🎶 (option)',                 badges:[],                          comment:'' },
+  { id:11, name:'Q 🎶',                          badges:[],                          comment:'' },
 ];
-let nextId = 13;
+let nextId = 12;
 let dragType = null;
 let modalTarget = null;
 
+// ── Badges personnalisés (créés depuis la palette) ──
+let customBadges = [];   // [{ type:'c1', label:'HF', color:'#9b59b6' }]
+let nextCustomId = 1;
+
 const byId = id => document.getElementById(id);
 const isMobile = () => window.innerWidth <= 640 || ('ontouchstart' in window);
+
+/* ══════════════════════════════════════════
+   BADGES — résolution label/couleur (intégrés + perso)
+══════════════════════════════════════════ */
+function allTypes()    { return [...ALL_TYPES, ...customBadges.map(b => b.type)]; }
+function isCustom(type) { return !LABELS[type]; }
+function findCustom(type) { return customBadges.find(b => b.type === type); }
+function labelOf(type) {
+  if (LABELS[type]) return LABELS[type];
+  const c = findCustom(type);
+  return c ? c.label : type;
+}
+function hexToRgb(hex) {
+  const h = String(hex || '').replace('#', '');
+  const n = h.length === 3 ? h.split('').map(c => c + c).join('') : h.padEnd(6, '0');
+  return { r: parseInt(n.slice(0, 2), 16) || 0, g: parseInt(n.slice(2, 4), 16) || 0, b: parseInt(n.slice(4, 6), 16) || 0 };
+}
+function customColors(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  return { bg: `rgba(${r},${g},${b},0.16)`, text: hex, border: `rgba(${r},${g},${b},0.5)` };
+}
+// Applique la couleur d'un badge à un élément (classe CSS si intégré, style inline si perso)
+function applyBadgeStyle(el, type) {
+  if (LABELS[type]) { el.classList.add(type); return; }
+  const c = findCustom(type);
+  if (c) {
+    const col = customColors(c.color);
+    el.style.background = col.bg;
+    el.style.color = col.text;
+    el.style.border = '1px solid ' + col.border;
+  }
+}
 
 /* ══════════════════════════════════════════
    HEADER BADGES
@@ -672,8 +609,9 @@ function renderTable(animateLast = false) {
     tdDrop.dataset.emptyLabel = isMobile() ? '↓ toucher' : '↓ déposer';
     m.badges.forEach((type, bidx) => {
       const span = document.createElement('span');
-      span.className = `micro-badge ${type}`;
-      span.textContent = LABELS[type] || type;
+      span.className = 'micro-badge';
+      applyBadgeStyle(span, type);
+      span.textContent = labelOf(type);
       span.title = 'Cliquer pour retirer';
       span.addEventListener('click', e => { e.stopPropagation(); m.badges.splice(bidx, 1); renderTable(); });
       tdDrop.appendChild(span);
@@ -708,13 +646,99 @@ function renderTable(animateLast = false) {
 /* ── Palette ── */
 function buildPalette() {
   const pal = byId('palette'); pal.innerHTML = '';
-  ALL_TYPES.forEach(type => {
+  allTypes().forEach(type => {
     const span = document.createElement('span');
-    span.className = `palette-badge ${type}`; span.draggable = true; span.textContent = LABELS[type];
+    span.className = 'palette-badge';
+    applyBadgeStyle(span, type);
+    span.draggable = true;
+    span.textContent = labelOf(type);
     span.addEventListener('dragstart', e => { dragType = type; e.dataTransfer.effectAllowed = 'copy'; });
     span.addEventListener('dragend', () => dragType = null);
+    if (isCustom(type)) {
+      const del = document.createElement('span');
+      del.textContent = '×';
+      del.title = 'Supprimer ce badge de la palette';
+      del.style.cssText = 'margin-left:8px;cursor:pointer;font-weight:700;opacity:0.65;';
+      del.addEventListener('click', e => { e.stopPropagation(); deleteCustomBadge(type); });
+      del.addEventListener('mouseenter', () => del.style.opacity = '1');
+      del.addEventListener('mouseleave', () => del.style.opacity = '0.65');
+      span.appendChild(del);
+    }
     pal.appendChild(span);
   });
+  const add = document.createElement('button');
+  add.className = 'btn-add-badge';
+  add.textContent = '+ badge';
+  add.title = 'Créer un badge personnalisé';
+  add.addEventListener('click', addCustomBadge);
+  pal.appendChild(add);
+}
+
+/* ── Badges personnalisés ── */
+function addCustomBadge() {
+  promptNewBadge((label, color) => {
+    customBadges.push({ type: 'c' + (nextCustomId++), label, color });
+    buildPalette();
+    if (modalTarget) renderModal();
+    saveToStorage();
+    showToast('Badge « ' + label + ' » ajouté à la palette');
+  });
+}
+
+function deleteCustomBadge(type) {
+  customBadges = customBadges.filter(b => b.type !== type);
+  musicians.forEach(m => { m.badges = m.badges.filter(t => t !== type); });
+  buildPalette();
+  renderTable();
+  if (modalTarget) renderModal();
+}
+
+// Petite boîte de dialogue (nom + couleur) — fonctionne desktop & mobile
+function promptNewBadge(onDone) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;';
+  const box = document.createElement('div');
+  box.style.cssText = "background:var(--card);border:1px solid var(--gold-dim);border-radius:10px;padding:22px;width:300px;max-width:92vw;font-family:'Inter',sans-serif;";
+  box.innerHTML =
+    "<div style=\"font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:0.1em;color:var(--gold);margin-bottom:16px;\">Nouveau badge</div>"
+    + '<label style="font-size:11px;color:var(--grey);letter-spacing:0.08em;">Nom</label>'
+    + "<input id=\"nb-name\" maxlength=\"24\" placeholder=\"ex : HF, In-Ear, Talkback…\" style=\"width:100%;margin:6px 0 16px;padding:9px 11px;background:var(--black);border:1px solid var(--border);color:var(--white);border-radius:5px;font-family:'Space Mono',monospace;font-size:13px;outline:none;\">"
+    + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">'
+    + '<label style="font-size:11px;color:var(--grey);letter-spacing:0.08em;">Couleur</label>'
+    + '<input id="nb-color" type="color" value="#9b59b6" style="width:50px;height:32px;border:1px solid var(--border);border-radius:5px;background:none;cursor:pointer;padding:2px;">'
+    + '<span id="nb-preview" class="micro-badge" style="margin-left:auto;"></span>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;">'
+    + "<button id=\"nb-ok\" style=\"flex:1;padding:11px;background:rgba(200,168,75,0.12);border:1px solid var(--gold-dim);color:var(--gold);border-radius:5px;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;\">Ajouter</button>"
+    + "<button id=\"nb-cancel\" style=\"flex:1;padding:11px;background:rgba(128,128,128,0.08);border:1px solid var(--border);color:var(--grey);border-radius:5px;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;\">Annuler</button>"
+    + '</div>';
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  const nameEl = box.querySelector('#nb-name');
+  const colorEl = box.querySelector('#nb-color');
+  const preview = box.querySelector('#nb-preview');
+  const refresh = () => {
+    const col = customColors(colorEl.value);
+    preview.textContent = nameEl.value.trim() || 'aperçu';
+    preview.style.background = col.bg; preview.style.color = col.text; preview.style.border = '1px solid ' + col.border;
+  };
+  refresh();
+  nameEl.addEventListener('input', refresh);
+  colorEl.addEventListener('input', refresh);
+  setTimeout(() => nameEl.focus(), 50);
+
+  const close = () => ov.remove();
+  box.querySelector('#nb-cancel').addEventListener('click', close);
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  const ok = () => {
+    const label = nameEl.value.trim();
+    if (!label) { nameEl.focus(); return; }
+    close();
+    onDone(label, colorEl.value);
+  };
+  box.querySelector('#nb-ok').addEventListener('click', ok);
+  nameEl.addEventListener('keydown', e => { if (e.key === 'Enter') ok(); });
 }
 
 /* ── Modal ── */
@@ -735,18 +759,28 @@ function renderModal() {
   } else {
     m.badges.forEach((type, bidx) => {
       const btn = document.createElement('button');
-      btn.className = `modal-badge-active ${type}`; btn.textContent = LABELS[type];
+      btn.className = 'modal-badge-active';
+      applyBadgeStyle(btn, type);
+      btn.textContent = labelOf(type);
       btn.addEventListener('click', () => { m.badges.splice(bidx, 1); renderModal(); renderTable(); });
       cur.appendChild(btn);
     });
   }
   const grid = byId('modal-grid'); grid.innerHTML = '';
-  ALL_TYPES.forEach(type => {
+  allTypes().forEach(type => {
     const btn = document.createElement('button');
-    btn.className = `modal-add-btn ${type}`; btn.textContent = '+ ' + LABELS[type];
+    btn.className = 'modal-add-btn';
+    applyBadgeStyle(btn, type);
+    btn.textContent = '+ ' + labelOf(type);
     btn.addEventListener('click', () => { if (m.badges.includes(type)) return; m.badges.push(type); renderModal(); renderTable(); });
     grid.appendChild(btn);
   });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'modal-add-btn';
+  addBtn.style.cssText = 'border:1px dashed var(--gold-dim);color:var(--gold-dim);background:transparent;';
+  addBtn.textContent = '+ badge perso';
+  addBtn.addEventListener('click', addCustomBadge);
+  grid.appendChild(addBtn);
   byId('modal-comment').oninput = () => { m.comment = byId('modal-comment').value; renderTable(); };
 }
 
@@ -775,171 +809,51 @@ byId('band-name').addEventListener('input', () => {
 });
 
 /* ══════════════════════════════════════════
-   THEME ENGINE
+   THEME — clair (sépia) / sombre, suit l'appareil
 ══════════════════════════════════════════ */
-const CSS_VARS = {
-  't-black':      '--black',
-  't-white':      '--white',
-  't-gold':       '--gold',
-  't-gold-dim':   '--gold-dim',
-  't-gold-light': '--gold-light',
-  't-border':     '--border',
-  't-grey':       '--grey',
-  't-muted':      '--muted',
-};
+const THEME_KEY = 'ssbbb_theme';
+let currentMode = 'dark';
 
-const DEFAULT_THEME = {
-  't-black':      '#0a0a0a',
-  't-white':      '#f0ece0',
-  't-gold':       '#c8a84b',
-  't-gold-dim':   '#6b5a28',
-  't-gold-light': '#D9C382',
-  't-border':     '#2a2a2a',
-  't-grey':       '#888880',
-  't-muted':      '#444440',
-  't-font-body':  "'Space Mono', monospace",
-  't-font-title': "'Bebas Neue', sans-serif",
-  't-grain':      '0.4',
-  't-glow':       '0.5',
-};
+// Préférence du système d'exploitation
+function systemMode() {
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'sepia' : 'dark';
+}
 
-const PRESETS = [
-  {
-    name: '🖤 Dark Gold', color: '#c8a84b',
-    values: { ...DEFAULT_THEME },
-  },
-  {
-    name: '❄️ Ice Blue', color: '#5dade2',
-    values: {
-      't-black':'#060e18','t-white':'#e8f4fd','t-gold':'#5dade2','t-gold-dim':'#1e5070',
-      't-gold-light':'#a9d4f0','t-border':'#0e2535','t-grey':'#7fa8c8','t-muted':'#2a4a6a',
-      't-font-body':"'Space Mono', monospace",'t-font-title':"'Bebas Neue', sans-serif",
-      't-grain':'0.3','t-glow':'0.4',
-    },
-  },
-  {
-    name: '🩸 Rouge', color: '#e74c3c',
-    values: {
-      't-black':'#100808','t-white':'#f8eded','t-gold':'#e74c3c','t-gold-dim':'#7a1a1a',
-      't-gold-light':'#f0a090','t-border':'#2e0e0e','t-grey':'#a08080','t-muted':'#4a2020',
-      't-font-body':"'Space Mono', monospace",'t-font-title':"'Bebas Neue', sans-serif",
-      't-grain':'0.4','t-glow':'0.6',
-    },
-  },
-  {
-    name: '🌿 Vert', color: '#58d68d',
-    values: {
-      't-black':'#060f0a','t-white':'#edf8f2','t-gold':'#58d68d','t-gold-dim':'#1e5a30',
-      't-gold-light':'#a0e8c0','t-border':'#0e2a18','t-grey':'#7aba9a','t-muted':'#2a4a30',
-      't-font-body':"'Space Mono', monospace",'t-font-title':"'Bebas Neue', sans-serif",
-      't-grain':'0.3','t-glow':'0.4',
-    },
-  },
-  {
-    name: '☁️ Blanc', color: '#888',
-    values: {
-      't-black':'#f5f5f0','t-white':'#1a1a1a','t-gold':'#333333','t-gold-dim':'#999999',
-      't-gold-light':'#555555','t-border':'#dddddd','t-grey':'#666666','t-muted':'#aaaaaa',
-      't-font-body':"'Inter', sans-serif",'t-font-title':"'Bebas Neue', sans-serif",
-      't-grain':'0.1','t-glow':'0.0',
-    },
-  },
-];
-
-function applyTheme(values) {
-  const root = document.documentElement;
-  Object.entries(CSS_VARS).forEach(([inputId, cssVar]) => {
-    if (values[inputId]) root.style.setProperty(cssVar, values[inputId]);
-  });
-  // font
-  if (values['t-font-body'])  document.body.style.fontFamily = values['t-font-body'];
-  if (values['t-font-title']) {
-    document.querySelectorAll('.band-name-input, thead th, .modal-musician-name, .theme-panel-title')
-      .forEach(el => el.style.fontFamily = values['t-font-title']);
+// Applique un mode ('dark' | 'sepia'). persist=true → choix explicite mémorisé.
+function applyMode(mode, persist) {
+  currentMode = (mode === 'sepia') ? 'sepia' : 'dark';
+  document.documentElement.setAttribute('data-theme', currentMode);
+  const btn = byId('btn-theme-toggle');
+  if (btn) {
+    // l'icône montre la destination du clic
+    btn.textContent = currentMode === 'dark' ? '☀️' : '🌙';
+    btn.title = currentMode === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre';
   }
-  // grain
-  const grain = parseFloat(values['t-grain'] || 0.4);
-  document.body.style.setProperty('--grain-opacity', grain);
-  const before = document.querySelector('body::before');  // CSS pseudo - can't JS style, use variable trick
-  // We apply via a data attribute and CSS var fallback
-  document.documentElement.style.setProperty('--grain-val', grain);
-
-  // glow
-  const glow = parseFloat(values['t-glow'] || 0.5);
-  const glowColor = (values['t-gold'] || getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() || '#c8a84b');
-  document.querySelectorAll('.band-name-input').forEach(el =>
-    el.style.textShadow = `0 0 80px ${glowColor}${Math.round(glow * 0.4 * 255).toString(16).padStart(2,'0')}`
-  );
-
-  // sync pickers
-  Object.keys(CSS_VARS).forEach(id => {
-    const el = byId(id); if (el && values[id]) el.value = values[id];
-  });
-  if (values['t-font-body'])  byId('t-font-body').value  = values['t-font-body'];
-  if (values['t-font-title']) byId('t-font-title').value = values['t-font-title'];
-  if (values['t-grain']) byId('t-grain').value = values['t-grain'];
-  if (values['t-glow'])  byId('t-glow').value  = values['t-glow'];
+  if (persist) { try { localStorage.setItem(THEME_KEY, currentMode); } catch(e) {} }
 }
 
-function currentTheme() {
-  const vals = {};
-  Object.keys(DEFAULT_THEME).forEach(k => {
-    const el = byId(k);
-    if (el) vals[k] = el.value;
-  });
-  return vals;
+// Au démarrage : choix mémorisé sinon préférence de l'appareil
+function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch(e) {}
+  applyMode(saved === 'sepia' || saved === 'dark' ? saved : systemMode(), false);
+
+  // Suit l'appareil en direct tant que l'utilisateur n'a pas choisi explicitement
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = e => {
+      let chosen = null;
+      try { chosen = localStorage.getItem(THEME_KEY); } catch(err) {}
+      if (chosen !== 'sepia' && chosen !== 'dark') applyMode(e.matches ? 'dark' : 'sepia', false);
+    };
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+  }
 }
 
-// Wire up color pickers
-Object.entries(CSS_VARS).forEach(([inputId, cssVar]) => {
-  const el = byId(inputId);
-  if (el) el.addEventListener('input', () => {
-    document.documentElement.style.setProperty(cssVar, el.value);
-  });
+byId('btn-theme-toggle').addEventListener('click', () => {
+  applyMode(currentMode === 'dark' ? 'sepia' : 'dark', true);
 });
-
-// Font selects
-byId('t-font-body').addEventListener('change', () => {
-  document.body.style.fontFamily = byId('t-font-body').value;
-});
-byId('t-font-title').addEventListener('change', () => {
-  const f = byId('t-font-title').value;
-  document.querySelectorAll('.band-name-input, thead th, .modal-musician-name, .theme-panel-title')
-    .forEach(el => el.style.fontFamily = f);
-});
-
-// Grain & glow sliders (visual only, not pure CSS vars so handled manually)
-byId('t-grain').addEventListener('input', () => {
-  document.documentElement.style.setProperty('--grain-val', byId('t-grain').value);
-});
-byId('t-glow').addEventListener('input', () => {
-  const g = parseFloat(byId('t-glow').value);
-  const c = getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() || '#c8a84b';
-  document.querySelectorAll('.band-name-input').forEach(el =>
-    el.style.textShadow = `0 0 80px ${c}${Math.round(g * 0.4 * 255).toString(16).padStart(2,'0')}`
-  );
-});
-
-// Build presets
-const presetRow = byId('preset-row');
-PRESETS.forEach(p => {
-  const btn = document.createElement('button');
-  btn.className = 'preset-btn';
-  btn.textContent = p.name;
-  btn.style.background = p.color + '22';
-  btn.style.border = `1px solid ${p.color}66`;
-  btn.style.color = p.color;
-  btn.addEventListener('click', () => applyTheme(p.values));
-  presetRow.appendChild(btn);
-});
-
-// Reset
-byId('theme-reset').addEventListener('click', () => applyTheme(DEFAULT_THEME));
-
-// Open / close theme panel
-byId('btn-theme').addEventListener('click', () => byId('theme-overlay').classList.add('open'));
-byId('theme-close').addEventListener('click', () => byId('theme-overlay').classList.remove('open'));
-byId('theme-overlay').addEventListener('click', e => { if (e.target === byId('theme-overlay')) byId('theme-overlay').classList.remove('open'); });
 
 /* ══════════════════════════════════════════
    PDF EXPORT
@@ -993,7 +907,8 @@ byId('btn-pdf').addEventListener('click', async () => {
     }
 
     const badgeHtml = type => {
-      const c = BADGE_COLORS[type] || { bg: '#222', text: '#aaa', border: '#444' };
+      const cb = findCustom(type);
+      const c = BADGE_COLORS[type] || (cb ? customColors(cb.color) : { bg: '#222', text: '#aaa', border: '#444' });
       return `<span style="
         display:inline-block;
         padding:3px 8px;
@@ -1008,7 +923,7 @@ byId('btn-pdf').addEventListener('click', async () => {
         color:${c.text};
         border:1px solid ${c.border};
         white-space:nowrap;
-      ">${escapeHtml(LABELS[type] || type)}</span>`;
+      ">${escapeHtml(labelOf(type))}</span>`;
     };
 
     const badgesBarHtml = allBadgeLabels.map(t => `
@@ -1440,7 +1355,6 @@ byId('btn-save').addEventListener('click', () => {
   const subtitle  = byId('band-subtitle').value;
   const phone     = byId('footer-phone').value;
   const year      = byId('footer-year').value;
-  const theme     = currentTheme();
 
   let html = document.documentElement.outerHTML;
 
@@ -1450,14 +1364,6 @@ byId('btn-save').addEventListener('click', () => {
   html = html.replace(/id="band-subtitle" value="[^"]*"/, `id="band-subtitle" value="${esc(subtitle)}"`);
   html = html.replace(/id="footer-phone" value="[^"]*"/, `id="footer-phone" value="${esc(phone)}"`);
   html = html.replace(/id="footer-year" value="[^"]*"/, `id="footer-year" value="${esc(year)}"`);
-
-  // Inject saved theme as an inline script that runs on load (replace existing one if present)
-  const themeScript = `<script>window.__savedTheme = ${JSON.stringify(theme)};<\/script>`;
-  if (html.includes('window.__savedTheme')) {
-    html = html.replace(/<script>window\.__savedTheme[\s\S]*?<\/script>/, themeScript);
-  } else {
-    html = html.replace('</head>', themeScript + '</head>');
-  }
 
   // Embed a clean, import-friendly data blob (base64, Unicode-safe) so the file
   // can be re-opened/transformed via the "Ouvrir" button reliably
@@ -1509,11 +1415,11 @@ function captureState() {
     v: 1,
     musicians,
     headerBadges,
+    customBadges,
     bandName: byId('band-name').value,
     subtitle: byId('band-subtitle').value,
     phone:    byId('footer-phone').value,
     year:     byId('footer-year').value,
-    theme:    currentTheme(),
   };
 }
 
@@ -1539,7 +1445,10 @@ function loadData(d) {
   if (d.subtitle != null) byId('band-subtitle').value = d.subtitle;
   if (d.phone    != null) byId('footer-phone').value  = d.phone;
   if (d.year     != null) byId('footer-year').value   = d.year;
-  if (d.theme) applyTheme(d.theme);
+  // Badges personnalisés (remplacés à chaque chargement)
+  customBadges = Array.isArray(d.customBadges) ? d.customBadges : [];
+  nextCustomId = Math.max(0, ...customBadges
+    .map(b => parseInt(String(b.type).replace(/\D/g, '')) || 0)) + 1;
   return true;
 }
 
@@ -1547,6 +1456,7 @@ function loadData(d) {
 function applyState(d) {
   if (!loadData(d)) return false;
   renderHeaderBadges();
+  buildPalette();
   renderTable();
   saveToStorage();
   return true;
@@ -1632,10 +1542,8 @@ async function importFile(file) {
         data = {};
         const mus = text.match(/let musicians = (\[[\s\S]*?\]);/);
         const hb  = text.match(/let headerBadges = (\[[\s\S]*?\]);/);
-        const th  = text.match(/window\.__savedTheme = ({[\s\S]*?});<\/script>/);
         if (mus) try { data.musicians    = JSON.parse(mus[1]); } catch(e) {}
         if (hb)  try { data.headerBadges = JSON.parse(hb[1]);  } catch(e) {}
-        if (th)  try { data.theme        = JSON.parse(th[1]);  } catch(e) {}
         const dom = new DOMParser().parseFromString(text, 'text/html');
         const gv = id => dom.getElementById(id)?.getAttribute('value');
         if (gv('band-name')     != null) data.bandName = gv('band-name');
@@ -1674,6 +1582,9 @@ byId('file-input').addEventListener('change', e => {
 function boot() {
   let loaded = false;
 
+  // Thème (clair/sombre) — indépendant de la fiche, suit l'appareil
+  initTheme();
+
   // 1) Fiche reçue via un lien partagé (#d=...) — prioritaire
   if (location.hash.startsWith('#d=')) {
     try { loaded = loadData(decodeState(location.hash.slice(3))); }
@@ -1682,7 +1593,6 @@ function boot() {
 
   // 2) Sinon, dernière fiche sauvegardée dans ce navigateur
   if (!loaded) {
-    if (window.__savedTheme) applyTheme(window.__savedTheme);
     loaded = loadFromStorage();
   }
 

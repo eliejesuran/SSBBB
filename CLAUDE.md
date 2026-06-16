@@ -17,30 +17,31 @@ Un seul fichier : `index.html` (~1700 lignes). HTML + CSS + JS inline — aucun 
 
 | Zone | Lignes | Rôle |
 |---|---|---|
-| CSS | 14–~390 | Styles complets, responsive, animations, dark mode, media queries |
-| HTML | ~390–530 | Structure : header, toolbar (8 boutons), tableau, palette, modals, `#file-input` |
-| DATA | ~535 | `musicians[]`, `headerBadges[]`, `LABELS`, `BADGE_COLORS` |
-| HEADER BADGES | ~585 | Badges dynamiques en-tête (nombre musiciens, infos scène) |
-| TABLE | ~648 | Rendu du tableau musiciens ; `renderTable()` appelle `saveToStorage()` en fin |
-| PALETTE / MODAL | ~700 | Palette glissable (desktop) + bottom sheet mobile |
-| THEME ENGINE | ~778 | Presets couleur, sliders grain/glow, pickers CSS |
-| PDF EXPORT | ~945 | Pagination auto, rendu html2canvas, export jsPDF |
-| SAVE HTML | ~1433 | Snapshot `.html` (état `let musicians`/inputs + blob `__ficheData` base64 + `__savedTheme`) |
-| LOCALSTORAGE | ~1480 | `saveToStorage`/`loadFromStorage` reposent sur `captureState`/`loadData` |
-| PORTABILITÉ | ~1502 | `captureState`, `loadData`, `applyState`, `encodeState`/`decodeState`, `newFiche`, `shareLink`, `importFile`, `exportJson`, `showToast` |
-| INIT | ~1672 | `boot()` : priorité lien `#d=` → localStorage → données d'exemple |
+| CSS | 14–~335 | Styles complets, responsive, `html[data-theme="sepia"]` (mode clair), bouton bascule, media queries |
+| HTML | ~338–440 | `#btn-theme-toggle` (haut droite), header, toolbar (7 boutons), tableau, palette, modal, `#file-input` |
+| DATA | ~455 | `musicians[]`, `headerBadges[]`, `customBadges[]`, `LABELS`, `BADGE_COLORS` |
+| BADGE HELPERS | ~487 | `allTypes`, `labelOf`, `customColors`, `applyBadgeStyle` (classe CSS si intégré, style inline si perso) |
+| HEADER BADGES | ~500 | Badges dynamiques en-tête (nombre musiciens, infos scène) |
+| TABLE | ~570 | Rendu du tableau musiciens ; `renderTable()` appelle `saveToStorage()` en fin |
+| PALETTE / MODAL | ~620 | Palette glissable + création badges perso (`addCustomBadge`/`promptNewBadge`/`deleteCustomBadge`) + bottom sheet mobile |
+| THEME | ~812 | `applyMode`/`initTheme`/`systemMode` : sépia ↔ sombre, suit l'appareil, persiste `ssbbb_theme` |
+| PDF EXPORT | ~865 | Pagination auto, rendu html2canvas, export jsPDF (badges perso via `customColors`) |
+| SAVE HTML | ~1360 | Snapshot `.html` (état `let musicians`/inputs + blob `__ficheData` base64) |
+| PORTABILITÉ | ~1430 | `captureState`, `loadData`, `applyState`, `encodeState`/`decodeState`, `newFiche`, `shareLink`, `importFile`, `exportJson` |
+| INIT | ~1585 | `boot()` : `initTheme()` puis priorité lien `#d=` → localStorage → données d'exemple |
 
 ## Fonctionnalités
 
 - **Tableau musiciens** : nom éditable, badges micro/DI par glisser-déposer (desktop) ou modal (mobile), colonne commentaires, réordonnancement drag & drop des lignes
 - **Badges disponibles** : Kick, Overhead, DI, Ampli repiqué, SM58, XLR, Jack, ⚠ Sans phantom
+- **Badges personnalisés** : bouton « + badge » dans la palette (ou « + badge perso » dans le modal mobile) → nom + couleur ; réutilisables, supprimables (×), intégrés au PDF / partage / sauvegarde (`customBadges[]`, types `c1`, `c2`…)
 - **Badges d'en-tête** : informations scène (nombre de musiciens, dimensions, etc.), éditables et supprimables
-- **Thème** : 5 presets (Dark Gold, Ice Blue, Rouge, Vert, Blanc), couleurs entièrement personnalisables, choix de police, effet grain et glow
+- **Thème** : deux modes seulement — **sépia (clair)** et **sombre** — bascule via le bouton ☀️/🌙 en haut à droite. Suit `prefers-color-scheme` de l'appareil tant que l'utilisateur n'a pas choisi explicitement (choix mémorisé dans `localStorage` `ssbbb_theme`). Le thème est une **préférence d'appareil, pas une donnée de la fiche** (non inclus dans le partage / l'export). Implémenté via `html[data-theme="sepia"]` qui surcharge les variables CSS.
 - **Export PDF** : pagination automatique A4, respect du thème actif, nom de fichier avec l'année
 - **Nouvelle fiche** (📄) : repart d'une fiche vierge (1 ligne, champs vides) — pour qu'un nouvel utilisateur crée la sienne sans effacer 12 lignes à la main
 - **Partager** (🔗) : copie un lien autoportant (`#d=` + état base64 Unicode-safe) ; utilise `navigator.share` sur mobile. Aucun serveur — le lien contient toute la fiche
 - **Ouvrir / importer** (📂) : recharge une fiche depuis un `.json` ou un `.html` sauvegardé (blob `__ficheData`, sinon parsing legacy `let musicians` + valeurs d'inputs via `DOMParser`) → pour modifier/transformer une fiche existante
-- **Sauvegarde HTML** (💾) : snapshot complet avec données et thème embarqués, réouvrable dans le navigateur
+- **Sauvegarde HTML** (💾) : snapshot complet avec données embarquées (blob `__ficheData`), réouvrable dans le navigateur
 - **Export JSON** (`{ }`) : données seules (`captureState()`), légères à versionner/partager
 
 ## Lancer l'application
@@ -68,10 +69,11 @@ Aucun serveur requis. Fonctionne hors-ligne une fois ouvert (les polices Google 
 - [x] **Aucune persistance localStorage** — autosave à chaque mutation (musiciens, badges, champs texte)
 - [x] **`renderTable` en récursion infinie** (`Maximum call stack size exceeded`) — le wrapper d'autosave redéclarait `function renderTable` ; par hoisting, `const _origRenderTable = renderTable` capturait le wrapper lui-même → la table ne s'affichait plus du tout. Corrigé : `saveToStorage()` appelé directement en fin du vrai `renderTable`, wrapper supprimé.
 - [x] **Réutilisable par tout le monde** — bouton « Nouvelle fiche », partage par lien autoportant, import `.json`/`.html`, export JSON (voir Fonctionnalités)
+- [x] **Thème simplifié** — panneau (5 presets, pickers, polices, grain/glow) remplacé par 2 modes sépia/sombre suivant l'appareil, bascule ☀️/🌙 en haut à droite
 
 ### Améliorations à prévoir
 
-- [ ] Ajouter un type de badge personnalisé (champ libre + couleur)
+- [x] ~~Ajouter un type de badge personnalisé (champ libre + couleur)~~ — fait (bouton « + badge » de la palette)
 - [ ] Réordonner les lignes du tableau par glisser-déposer (le CSS `drag-over` est prêt mais le réordonnement n'est pas implémenté)
 - [x] ~~Export JSON des données seules~~ — fait (bouton `{ }`)
 - [x] ~~État dans l'URL (Option 3)~~ — fait (bouton 🔗 Partager, état encodé dans `#d=`)
