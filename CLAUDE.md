@@ -19,13 +19,13 @@ Un seul fichier : `index.html` (~1700 lignes). HTML + CSS + JS inline — aucun 
 |---|---|---|
 | CSS | 14–~335 | Styles complets, responsive, `html[data-theme="sepia"]` (mode clair), bouton bascule, media queries |
 | HTML | ~338–440 | `#btn-theme-toggle` (haut droite), header, toolbar (7 boutons), tableau, palette, modal, `#file-input` |
-| DATA | ~455 | `musicians[]`, `headerBadges[]`, `customBadges[]`, `LABELS`, `BADGE_COLORS` |
+| DATA | ~455 | `musicians[]`, `headerBadges[]`, `customBadges[]`, `LABELS` (couleurs des badges intégrés : classes CSS `.kick`/`.oh`… surchargées en sépia) |
 | BADGE HELPERS | ~487 | `allTypes`, `labelOf`, `customColors`, `applyBadgeStyle` (classe CSS si intégré, style inline si perso) |
 | HEADER BADGES | ~500 | Badges dynamiques en-tête (nombre musiciens, infos scène) |
 | TABLE | ~570 | Rendu du tableau musiciens ; `renderTable()` appelle `saveToStorage()` en fin |
 | PALETTE / MODAL | ~620 | Palette glissable + création badges perso (`addCustomBadge`/`promptNewBadge`/`deleteCustomBadge`) + bottom sheet mobile |
 | THEME | ~812 | `applyMode`/`initTheme`/`systemMode` : sépia ↔ sombre, suit l'appareil, persiste `ssbbb_theme` |
-| PDF EXPORT | ~865 | Pagination auto, rendu html2canvas, export jsPDF (badges perso via `customColors`) |
+| PDF EXPORT | ~865 | Pagination auto, rendu html2canvas, export jsPDF, fidèle au thème (`pdfBadgeColors` lit `getComputedStyle` d'un badge rendu), cadre `notesBlockHtml` placé sous la dernière page ou sur une page dédiée |
 | SAVE HTML | ~1360 | Snapshot `.html` (état `let musicians`/inputs + blob `__ficheData` base64) |
 | PORTABILITÉ | ~1430 | `captureState`, `loadData`, `applyState`, `encodeState`/`decodeState`, `newFiche`, `shareLink`, `importFile`, `exportJson` |
 | INIT | ~1585 | `boot()` : `initTheme()` puis priorité lien `#d=` → localStorage → données d'exemple |
@@ -37,7 +37,8 @@ Un seul fichier : `index.html` (~1700 lignes). HTML + CSS + JS inline — aucun 
 - **Badges personnalisés** : bouton « + badge » dans la palette (ou « + badge perso » dans le modal mobile) → nom + couleur ; réutilisables, supprimables (×), intégrés au PDF / partage / sauvegarde (`customBadges[]`, types `c1`, `c2`…)
 - **Badges d'en-tête** : informations scène (nombre de musiciens, dimensions, etc.), éditables et supprimables
 - **Thème** : deux modes seulement — **sépia (clair)** et **sombre** — bascule via le bouton ☀️/🌙 en haut à droite. Suit `prefers-color-scheme` de l'appareil tant que l'utilisateur n'a pas choisi explicitement (choix mémorisé dans `localStorage` `ssbbb_theme`). Le thème est une **préférence d'appareil, pas une donnée de la fiche** (non inclus dans le partage / l'export). Implémenté via `html[data-theme="sepia"]` qui surcharge les variables CSS.
-- **Export PDF** : pagination automatique A4, respect du thème actif, nom de fichier avec l'année
+- **Notes générales** : cadre de texte libre (`#general-notes`) sous le tableau, imprimé sur le PDF (sous la dernière page si la place le permet, sinon page dédiée). Inclus dans l'état (`notes`) → partagé / exporté / sauvegardé comme le reste
+- **Export PDF** : pagination automatique A4, **fidèle au thème actif** — fond/texte via les variables CSS (`--black`/`--white`) *et* badges via les couleurs réellement calculées du thème (`pdfBadgeColors`, donc suit les surcharges sépia) ; cadre de notes inclus ; nom de fichier avec l'année
 - **Nouvelle fiche** (📄) : repart d'une fiche vierge (1 ligne, champs vides) — pour qu'un nouvel utilisateur crée la sienne sans effacer 12 lignes à la main
 - **Partager** (🔗) : copie un lien autoportant (`#d=` + état base64 Unicode-safe) ; utilise `navigator.share` sur mobile. Aucun serveur — le lien contient toute la fiche
 - **Ouvrir / importer** (📂) : recharge une fiche depuis un `.json` ou un `.html` sauvegardé (blob `__ficheData`, sinon parsing legacy `let musicians` + valeurs d'inputs via `DOMParser`) → pour modifier/transformer une fiche existante
