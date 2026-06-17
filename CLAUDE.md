@@ -22,7 +22,7 @@ Un seul fichier : `index.html` (~1700 lignes). HTML + CSS + JS inline — aucun 
 | DATA | ~455 | `musicians[]`, `headerBadges[]`, `customBadges[]`, `LABELS` (couleurs des badges intégrés : classes CSS `.kick`/`.oh`… surchargées en sépia) |
 | BADGE HELPERS | ~487 | `allTypes`, `labelOf`, `customColors`, `applyBadgeStyle` (classe CSS si intégré, style inline si perso) |
 | HEADER BADGES | ~500 | Badges dynamiques en-tête (nombre musiciens, infos scène) |
-| TABLE | ~570 | Rendu du tableau musiciens ; `renderTable()` appelle `saveToStorage()` en fin |
+| TABLE | ~570 | Rendu du tableau musiciens ; `renderTable()` appelle `saveToStorage()` en fin ; `moveRow()` = réordonnancement des lignes par glisser-déposer (poignée `.row-grip`) |
 | PALETTE / MODAL | ~620 | Palette glissable + création badges perso (`addCustomBadge`/`promptNewBadge`/`deleteCustomBadge`) + bottom sheet mobile |
 | THEME | ~812 | `applyMode`/`initTheme`/`systemMode` : sépia ↔ sombre, suit l'appareil, persiste `ssbbb_theme` |
 | PDF EXPORT | ~865 | Pagination auto, rendu html2canvas, export jsPDF, fidèle au thème (`pdfBadgeColors` lit `getComputedStyle` d'un badge rendu), cadre `notesBlockHtml` placé sous la dernière page ou sur une page dédiée |
@@ -75,7 +75,7 @@ Aucun serveur requis. Fonctionne hors-ligne une fois ouvert (les polices Google 
 ### Améliorations à prévoir
 
 - [x] ~~Ajouter un type de badge personnalisé (champ libre + couleur)~~ — fait (bouton « + badge » de la palette)
-- [ ] Réordonner les lignes du tableau par glisser-déposer (le CSS `drag-over` est prêt mais le réordonnement n'est pas implémenté)
+- [x] ~~Réordonner les lignes du tableau par glisser-déposer~~ — fait : poignée `⠿` (`.row-grip`) dans la colonne `#`, `moveRow(fromId, toId)` réordonne `musicians[]` (vers le bas = après la cible, vers le haut = avant) ; la ligne gère à la fois le dépôt de badge (`dragType`) et le réordonnancement (`dragRowId`)
 - [x] ~~Export JSON des données seules~~ — fait (bouton `{ }`)
 - [x] ~~État dans l'URL (Option 3)~~ — fait (bouton 🔗 Partager, état encodé dans `#d=`)
 - [ ] Bouton "Dupliquer" une fiche pour créer des variantes (acoustique, électrique, etc.)
