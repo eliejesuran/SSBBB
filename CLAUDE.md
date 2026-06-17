@@ -84,15 +84,17 @@ Aucun serveur requis. Fonctionne hors-ligne une fois ouvert (les polices Google 
 
 ## Partage de la fiche — Options recommandées
 
-### Option 1 — GitHub Pages (recommandée pour ce projet)
-Le dépôt est déjà sur GitHub. Activer GitHub Pages sur la branche `main` rend la fiche accessible à une URL publique permanente, sans infrastructure supplémentaire.
+### Option 1 — GitHub Pages ✅ (méthode de déploiement retenue)
+Comme les autres apps statiques du compte (`setlist`, `dashboard_vents`, `mix`, `compteur`…), SSBBB est déployé via **GitHub Pages** — gratuit, sans identifiant, sans serveur FTP/SFTP. Le workflow `.github/workflows/deploy-pages.yml` (actions `configure-pages` / `upload-pages-artifact` / `deploy-pages`) publie le dépôt à chaque push sur `main`.
 
 ```
-Settings → Pages → Source: main / root → Save
-→ https://<user>.github.io/SSBBB/
+Réglage unique : Settings → Pages → Source: GitHub Actions
+→ https://eliejesuran.github.io/SSBBB/
 ```
 
-Chaque `git push` met à jour la fiche en ligne. Idéal pour partager avec un ingénieur du son avant un concert : un simple lien URL.
+Chaque `git push` sur `main` met la fiche en ligne. Idéal pour partager avec un ingénieur du son avant un concert : un simple lien URL.
+
+> **Historique :** un déploiement FTPS puis SFTP vers Infomaniak a été tenté (`deploy-ftp.yml`, supprimé) mais échouait systématiquement — FTPS refusé par le serveur, puis SSH port 22 injoignable depuis les runners. GitHub Pages évite tous ces problèmes de credentials/firewall.
 
 ### Option 2 — Partage du fichier HTML sauvegardé
 Cliquer "Sauvegarder HTML" génère un `.html` autonome avec toutes les données embarquées. Ce fichier peut être :
