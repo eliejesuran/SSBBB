@@ -958,13 +958,16 @@ byId('btn-pdf').addEventListener('click', async () => {
     const allBadgeLabels = [`${musicians.length} musiciens`, ...extraBadges];
 
     const style = getComputedStyle(document.documentElement);
-    const pdfBg          = style.getPropertyValue('--black').trim() || '#0a0a0a';
+    const isLight = document.documentElement.getAttribute('data-theme') === 'sepia';
     const pdfAccent      = style.getPropertyValue('--gold').trim() || '#c8a84b';
     const pdfAccentDim   = style.getPropertyValue('--gold-dim').trim() || '#6b5a28';
     const pdfAccentLight = style.getPropertyValue('--gold-light').trim() || '#D9C382';
-    const pdfText        = style.getPropertyValue('--white').trim() || '#f0ece0';
-    const pdfBorder      = style.getPropertyValue('--border').trim() || '#2a2a2a';
-    const pdfGrey        = style.getPropertyValue('--grey').trim() || '#888880';
+    // En mode clair : impression NOIR SUR BLANC (pas sur fond sépia) — plus simple à imprimer.
+    // En mode sombre : on garde le rendu fidèle (blanc sur noir) via les variables CSS.
+    const pdfBg     = isLight ? '#ffffff' : (style.getPropertyValue('--black').trim()  || '#0a0a0a');
+    const pdfText   = isLight ? '#1a1a1a' : (style.getPropertyValue('--white').trim()  || '#f0ece0');
+    const pdfBorder = isLight ? '#cccccc' : (style.getPropertyValue('--border').trim() || '#2a2a2a');
+    const pdfGrey   = isLight ? '#666666' : (style.getPropertyValue('--grey').trim()   || '#888880');
 
     const A4_W_MM = 210;
     const A4_H_MM = 297;
