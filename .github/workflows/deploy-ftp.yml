@@ -1,4 +1,4 @@
-name: Deploy FTP Infomaniak
+name: Deploy SFTP Infomaniak
 
 on:
   push:
@@ -6,28 +6,24 @@ on:
       - main
 
 jobs:
-  ftp-deploy:
+  sftp-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy to Infomaniak FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Deploy index.html to Infomaniak (SFTP)
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          # Répertoire local poussé (racine du dépôt)
-          local-dir: ./
-          # Répertoire distant sur le serveur (souvent /web/ ou /sites/... chez Infomaniak)
-          server-dir: ./
-          # Fichiers/dossiers à ne PAS envoyer
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/.github/**
-            **/CLAUDE.md
-            **/README.md
-            **/*.json
+          port: 22
+          # App mono-fichier : on n'envoie que index.html
+          local_path: ./index.html
+          # Dossier distant servi par le web. À ADAPTER : définir le secret
+          # FTP_REMOTE_DIR avec le bon chemin Infomaniak (souvent
+          # /sites/<domaine>/ ou /web/). Par défaut : home SFTP.
+          remote_path: ${{ secrets.FTP_REMOTE_DIR || './' }}
+          # Comptes Infomaniak souvent SFTP-only (sans shell) : on saute le mkdir
+          sftp_only: true
